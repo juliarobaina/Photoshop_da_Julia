@@ -4,25 +4,17 @@ import numpy as np
 
 
 
-matrizImagem = np.array([[1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1,1,1,1]])
+matrizImagem = np.array([[1,1,1],
+                  [1,1,1],
+                  [1,1,1],
+                  [1,1,1]])
 
-linhasMatrizImagem = 12
-colunasMatrizImagem= 10
+linhasMatrizImagem = 4
+colunasMatrizImagem= 3
 
 kernel = np.array([[2,2,2],
                   [2,2,2],
-                  [2,2,2],
+                  [2,2,2]
                   ])
 
 linhasKernel = 3
@@ -78,7 +70,11 @@ matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(
 #print(matrizZero)
 matrizImagemParaFiltro = matrizComBordasZeradas(matrizImagem, matrizZero, bordas, matrizZero.shape)
 print(matrizImagemParaFiltro)
-exit()
+
+
+'''
+aceita um filtro de tamanho qualquer passa-baixa (eu acho, verificar porque aqui só soma, até mudar o nome da função pra passabaixa) para uma matrizImagem de ordem qualquer
+'''
 def filtroConvolucao(matrizImagem, matrizImagemParaFiltro, kernel, ordemKernel,linhasMatrizImagem, colunasMatrizImagem):
 
     #tam = 3 #coluna limite (tam - 1) que o kernel vai estar, é a ordem do kernel
@@ -102,6 +98,8 @@ def filtroConvolucao(matrizImagem, matrizImagemParaFiltro, kernel, ordemKernel,l
                 # print(f'Estou no print do r M[{p}][{r}] * AUX[{x}][{z}]')
                     #soma += 1
                     #print(f'kernel[{p}][{r}] = {kernel[p][r]} + auxVetor[{x}][{z}] = {matrizImagemParaFiltro[x][z]}')
+                    #print(f'kernel = {p} {r}')
+                    #print(f'matrizImagemParaFiltro = {x} {z}')
                     soma += kernel[p][r] * matrizImagemParaFiltro[x][z]
                     z += 1
                     #print(f'Estou no print do r z={z}')
@@ -115,6 +113,8 @@ def filtroConvolucao(matrizImagem, matrizImagemParaFiltro, kernel, ordemKernel,l
                 soma = 255
             matrizImagem[i][j] = soma #usar matriz original em vez de B
             #print(f'B[{i}{j}] = {soma}')
+    return matrizImagem
 
+result = filtroConvolucao(matrizImagem,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
 print(f'Matriz resultante')
-print(matrizImagem)
+print(result)
