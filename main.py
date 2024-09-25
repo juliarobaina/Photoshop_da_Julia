@@ -3,6 +3,8 @@ from tkinter import filedialog
 import cv2
 from PIL import Image, ImageTk
 import numpy as np
+from math import floor
+
 def load_image():
     global img_cv
     file_path = filedialog.askopenfilename()
@@ -37,43 +39,103 @@ def display_image(img, original=False):
         edited_image_canvas.image = img_tk
         edited_image_canvas.create_image(x_offset, y_offset, anchor=tk.NW, image=img_tk)
 
+
+
+
+kernel = np.array([[1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1],
+                  [1,1,1,1,1,1,1]
+                  ])
+
+linhasKernel = 7
+colunasKernel = 7
+ordemMatrizKernel = 7
+bordas = ordemMatrizKernel // 2
+
+def matrizComBordasZeradas(matriz, matrizZero, bordas, tamanhoMatrizZero):
+    index = 0
+
+    linhasMatrizZero = tamanhoMatrizZero[0]
+    colunasMatrizZero = tamanhoMatrizZero[1]
+  
+    for i in range(bordas, linhasMatrizZero-bordas):
+      
+        matrizZero[i][bordas:colunasMatrizZero - bordas] = matriz[index]
+        index += 1
+    return matrizZero
+
+def filtroConvolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasMatrizImagem, colunasMatrizImagem):
+
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+
+            soma = 0
+            for p in range(0,ordemKernel):
+                z = j
+                for r in range(0,ordemKernel):
+                
+                    soma += (kernel[p][r] * matrizImagemParaFiltro[x][z])
+                   
+                    z += 1
+            
+                x += 1
+              
+            pixelNovo = floor(soma / 49)
+              #usar matriz original em vez de B. De acordo com 1 vídeo é a soma dividido pelo 1/9 por exemplo soma * (1/9)
+            if pixelNovo > 255: #normalização, pixels variam de 0-255
+                filtered_img[i][j] = 255
+            else:
+                filtered_img[i][j] = pixelNovo
+    #print(f'dentro da função filtr \n {filtered_img}')
+    return filtered_img
+
+
 def apply_filter(filter_type):
     #print(f'tamanho da matriz: {img_cv.shape}')
     if img_cv is None:
         return
     
     if filter_type == "low_pass":
-        filtered_img = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY) #faz ficar uma matriz 2x2, mais ou menos
-        tamM = filtered_img.shape #tamanho da matriz (m,n)
-        #print(f'{tamM}')
-        #exibi os valores da matriz
-        for i in range(0, tamM[0]):
-            for j in range(0,tamM[1]):
-                #print(f'{filtered_img[i][j]}',end=' ')
-                #print(type(filtered_img[i]))
-                n = np.min(filtered_img[i])
-                #if n != 255 and n!= 0:
-                l = list(filtered_img[i])
-                #print(len(filtered_img[i]))
-                
-                pos = l.index(int(n))
-               
-                #print(pos)
-                aux = filtered_img[i]
-                mediana = np.sort(aux)
-               
-                mediana = np.median(mediana)
-                
-                filtered_img[i][pos] = int(mediana)
-                #print(f'{tamM}--{filtered_img[i]}--{filtered_img[i][pos]}')
-                
-                    #filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
-                #exit
-                
-                #aux = filtered_img[i].index(np.minimum(filtered_img[i]))
-                #filtered_img[aux] = filtered_img[i].sort().median()
-            #print()
+        #filtered_img = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY) #faz ficar uma matriz 2x2, mais ou menos
+        b,g,r = cv2.split(img_cv)
+        b_novo = np.zeros_like(b)
+      
+        g_novo = np.zeros_like(g)
+        r_novo = np.zeros_like(r)
+        
        
+        tamImagem = img_cv.shape
+       
+        #print(tamImagem[3])
+        #for i in range(0,tamImagem[0]):
+            #print(img_cv[i])
+            #tamM = filtered_img.shape #tamanho da matriz (m,n)
+           # tam = img_cv[i].shape
+        linhasMatrizImagem, colunasMatrizImagem = r_novo.shape
+        
+        matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+        
+        matrizImagemParaFiltro = matrizComBordasZeradas(b, matrizZero, bordas, matrizZero.shape)
+        b_novo = filtroConvolucao(b,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
+        matrizImagemParaFiltro = matrizComBordasZeradas(g, matrizZero, bordas, matrizZero.shape)
+        g_novo = filtroConvolucao(g,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
+        matrizImagemParaFiltro = matrizComBordasZeradas(r, matrizZero, bordas, matrizZero.shape)
+        r_novo = filtroConvolucao(r,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
+        #print(img_cv)
+        filtered_img = cv2.merge((b_novo, g_novo, r_novo))
+        #filtered_img = img_cv
+        #print(img_cv.shape)
+        #print(filtered_img)
+       
+        #filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
         #filtered_img = cv2.GaussianBlur(img_cv, (15, 15), 0)
     elif filter_type == "high_pass":
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
