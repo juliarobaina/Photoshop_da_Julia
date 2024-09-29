@@ -42,20 +42,6 @@ def display_image(img, original=False):
 
 
 
-kernel = np.array([[1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1],
-                  [1,1,1,1,1,1,1]
-                  ])
-
-linhasKernel = 7
-colunasKernel = 7
-ordemMatrizKernel = 7
-bordas = ordemMatrizKernel // 2
-
 def matrizComBordasZeradas(matriz, matrizZero, bordas, tamanhoMatrizZero):
     index = 0
 
@@ -68,7 +54,7 @@ def matrizComBordasZeradas(matriz, matrizZero, bordas, tamanhoMatrizZero):
         index += 1
     return matrizZero
 
-def filtroConvolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasMatrizImagem, colunasMatrizImagem):
+def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasMatrizImagem, colunasMatrizImagem, divisao):
 
     for i in range(0, linhasMatrizImagem):
         z = 0
@@ -76,27 +62,152 @@ def filtroConvolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,l
         for j in range(0, colunasMatrizImagem):
             x = i
             z = j
-
+            
             soma = 0
             for p in range(0,ordemKernel):
                 z = j
                 for r in range(0,ordemKernel):
-                
                     soma += (kernel[p][r] * matrizImagemParaFiltro[x][z])
-                   
+                    
                     z += 1
-            
+               
                 x += 1
-              
-            pixelNovo = floor(soma / 49)
+            
+            pixelNovo = floor(soma / divisao)
+            #print(pixelNovo)
               #usar matriz original em vez de B. De acordo com 1 vídeo é a soma dividido pelo 1/9 por exemplo soma * (1/9)
             if pixelNovo > 255: #normalização, pixels variam de 0-255
                 filtered_img[i][j] = 255
+            elif pixelNovo < 0:
+                 filtered_img[i][j] = 0
             else:
                 filtered_img[i][j] = pixelNovo
     #print(f'dentro da função filtr \n {filtered_img}')
+    print(filtered_img)
     return filtered_img
 
+def filtroMedia(tamanhoFiltro:int):
+    
+    b,g,r = cv2.split(img_cv)
+ 
+    '''b_novo = np.zeros_like(b)
+    g_novo = np.zeros_like(g)
+    r_novo = np.zeros_like(r)'''
+    
+    #tamImagem = img_cv.shape
+    
+    #linhasMatrizImagem, colunasMatrizImagem = r_novo.shape    
+    linhasMatrizImagem, colunasMatrizImagem = r.shape    
+
+
+    if tamanhoFiltro == 3:
+        kernel = np.array([
+                        [1,1,1],
+                        [1,1,1],
+                        [1,1,1]
+                        ])
+        
+        ordemMatrizKernel = 3
+        bordas = ordemMatrizKernel // 2 #tanto faz linha ou coluna
+        divisao = 9
+        
+        matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(b, matrizZero, bordas, matrizZero.shape)
+        b = convolucao(b,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem,divisao)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(g, matrizZero, bordas, matrizZero.shape)
+        g = convolucao(g,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(r, matrizZero, bordas, matrizZero.shape)
+        r = convolucao(r,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+        
+        return cv2.merge((b, g, r))
+    
+        
+    elif tamanhoFiltro == 5:
+        pass
+    elif tamanhoFiltro == 7:
+        kernel = np.array([
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1],
+                        [1,1,1,1,1,1,1]
+                        ])
+        ordemMatrizKernel = 7
+        bordas = ordemMatrizKernel // 2 #tanto faz linha ou coluna
+        divisao = 49
+        
+        matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(b, matrizZero, bordas, matrizZero.shape)
+        b = convolucao(b,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem,divisao)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(g, matrizZero, bordas, matrizZero.shape)
+        g = convolucao(g,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+
+        matrizImagemParaFiltro = matrizComBordasZeradas(r, matrizZero, bordas, matrizZero.shape)
+        r = convolucao(r,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+        
+        return cv2.merge((b, g, r))
+    else:
+        print('entrada inválida')
+    
+def filtroGaussiano(tamanhoFiltro:int, sigma:float):
+   
+    b,g,r = cv2.split(img_cv)
+     
+    linhasMatrizImagem, colunasMatrizImagem = r.shape 
+ 
+    #tamanho acho que só pode ser ímpar, relembrar
+    #criar fórmula do gaussiano 
+    #montar matriz
+    #funcaoG = (1 / (2 * np.pi * (sigma ** 2))) * (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
+    #acho que depois de um valor o filtro para de incrementar o blur, valores ficam iguais após divisão
+    ''' kernel = np.zeros(shape=(tamanhoFiltro,tamanhoFiltro))
+   # print(kernel.dtype)
+    soma = 0
+    for x in range(0,tamanhoFiltro):
+        for y in range(0, tamanhoFiltro):
+            kernel[x][y] = (1 / (2 * np.pi * (sigma ** 2))) * (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
+            soma += kernel[x][y]
+    
+    print(kernel)'''
+
+ 
+ 
+ 
+ 
+ 
+    #print(kernel)
+    kernel = np.array([
+                    [1, 4, 7, 4, 1],
+                    [4, 16, 26, 16, 4],
+                    [7, 26, 41, 26, 7],
+                    [4, 16, 26, 16, 4],
+                    [1, 4, 7, 4, 1]                    
+                    ])
+    
+    ordemMatrizKernel = tamanhoFiltro
+    bordas = ordemMatrizKernel // 2 #tanto faz linha ou coluna
+    divisao = 273
+    #print(f'divi {divisao}')
+    
+    matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+
+    matrizImagemParaFiltro = matrizComBordasZeradas(b, matrizZero, bordas, matrizZero.shape)
+    b = convolucao(b,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem,divisao)
+
+    matrizImagemParaFiltro = matrizComBordasZeradas(g, matrizZero, bordas, matrizZero.shape)
+    g = convolucao(g,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+
+    matrizImagemParaFiltro = matrizComBordasZeradas(r, matrizZero, bordas, matrizZero.shape)
+    r = convolucao(r,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem, divisao)
+    
+    return cv2.merge((b, g, r))
 
 def apply_filter(filter_type):
     #print(f'tamanho da matriz: {img_cv.shape}')
@@ -104,33 +215,10 @@ def apply_filter(filter_type):
         return
     
     if filter_type == "low_pass":
-        #filtered_img = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY) #faz ficar uma matriz 2x2, mais ou menos
-        b,g,r = cv2.split(img_cv)
-        b_novo = np.zeros_like(b)
-      
-        g_novo = np.zeros_like(g)
-        r_novo = np.zeros_like(r)
+       
+        filtered_img = filtroGaussiano(5,10)
         
        
-        tamImagem = img_cv.shape
-       
-        #print(tamImagem[3])
-        #for i in range(0,tamImagem[0]):
-            #print(img_cv[i])
-            #tamM = filtered_img.shape #tamanho da matriz (m,n)
-           # tam = img_cv[i].shape
-        linhasMatrizImagem, colunasMatrizImagem = r_novo.shape
-        
-        matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
-        
-        matrizImagemParaFiltro = matrizComBordasZeradas(b, matrizZero, bordas, matrizZero.shape)
-        b_novo = filtroConvolucao(b,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
-        matrizImagemParaFiltro = matrizComBordasZeradas(g, matrizZero, bordas, matrizZero.shape)
-        g_novo = filtroConvolucao(g,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
-        matrizImagemParaFiltro = matrizComBordasZeradas(r, matrizZero, bordas, matrizZero.shape)
-        r_novo = filtroConvolucao(r,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem)
-        #print(img_cv)
-        filtered_img = cv2.merge((b_novo, g_novo, r_novo))
         #filtered_img = img_cv
         #print(img_cv.shape)
         #print(filtered_img)
