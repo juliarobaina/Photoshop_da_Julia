@@ -49,7 +49,6 @@ def matrizComBordasZeradas(matriz, matrizZero, bordas, tamanhoMatrizZero):
     colunasMatrizZero = tamanhoMatrizZero[1]
   
     for i in range(bordas, linhasMatrizZero-bordas):
-      
         matrizZero[i][bordas:colunasMatrizZero - bordas] = matriz[index]
         index += 1
     return matrizZero
@@ -86,7 +85,7 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
     print(filtered_img)
     return filtered_img
 
-def filtroMedia(tamanhoFiltro:int):
+def filtroMedia(tamanhoFiltro:int):#blur
     
     b,g,r = cv2.split(img_cv)
  
@@ -157,6 +156,8 @@ def filtroMedia(tamanhoFiltro:int):
         print('entrada inválida')
     
 def filtroGaussiano(tamanhoFiltro:int, sigma:float):
+
+
    
     b,g,r = cv2.split(img_cv)
      
@@ -167,33 +168,39 @@ def filtroGaussiano(tamanhoFiltro:int, sigma:float):
     #montar matriz
     #funcaoG = (1 / (2 * np.pi * (sigma ** 2))) * (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
     #acho que depois de um valor o filtro para de incrementar o blur, valores ficam iguais após divisão
-    ''' kernel = np.zeros(shape=(tamanhoFiltro,tamanhoFiltro))
+    '''kernel = np.zeros(shape=(tamanhoFiltro,tamanhoFiltro))
    # print(kernel.dtype)
     soma = 0
     for x in range(0,tamanhoFiltro):
         for y in range(0, tamanhoFiltro):
-            kernel[x][y] = (1 / (2 * np.pi * (sigma ** 2))) * (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
+            kernel[x][y] = (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
             soma += kernel[x][y]
     
-    print(kernel)'''
+    print(kernel)
+    for x in range(0,tamanhoFiltro):
+        for y in range(0, tamanhoFiltro):
+            kernel[x][y] /= soma'''
 
- 
- 
- 
- 
- 
-    #print(kernel)
+    
+
+
+
+
+
+
     kernel = np.array([
-                    [1, 4, 7, 4, 1],
-                    [4, 16, 26, 16, 4],
-                    [7, 26, 41, 26, 7],
-                    [4, 16, 26, 16, 4],
-                    [1, 4, 7, 4, 1]                    
+                    [1, 6, 15, 20, 15, 6, 1],
+                    [6, 36, 90, 120, 90, 36, 6],
+                    [15, 90, 225, 300, 225, 90, 15],
+                    [20, 120, 300, 400, 300, 120, 20],
+                    [15, 90, 225, 300, 225, 90, 15],
+                    [6, 36, 90, 120, 90, 36, 6],
+                    [1, 6, 15, 20, 15, 6, 1]                  
                     ])
     
     ordemMatrizKernel = tamanhoFiltro
     bordas = ordemMatrizKernel // 2 #tanto faz linha ou coluna
-    divisao = 273
+    divisao = 4096
     #print(f'divi {divisao}')
     
     matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
@@ -209,6 +216,263 @@ def filtroGaussiano(tamanhoFiltro:int, sigma:float):
     
     return cv2.merge((b, g, r))
 
+
+
+def filtroMediana(tamanhoFiltro:int):
+
+    b,g,r = cv2.split(img_cv)
+    
+    linhasMatrizImagem, colunasMatrizImagem = r.shape 
+    ordemMatrizKernel = tamanhoFiltro
+    bordas = ordemMatrizKernel // 2
+    print(f'tam r {colunasMatrizImagem} tam b {b.shape}')
+    
+    matrizZeroB = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+    matrizZeroG = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+    matrizZeroR = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
+    tamzL,tamzA = matrizZeroB.shape 
+    #-----------------------------------------------------------------------------------------------------------------------------
+    
+    #valores das arestas
+    matrizZeroB[bordas-1][bordas - 1] = b[0][0]#legal
+    matrizZeroB[(tamzL - bordas)][bordas-1] = b[linhasMatrizImagem - 1][0]#legal
+    matrizZeroB[bordas-1][colunasMatrizImagem + bordas] = b[0][colunasMatrizImagem - 1]#legal
+    matrizZeroB[(linhasMatrizImagem + bordas)][(colunasMatrizImagem + bordas)] = b[linhasMatrizImagem - 1][colunasMatrizImagem - 1]#legal
+    #valores das arestas, aí em cima
+    
+    #valores das linhas entre as arestas
+    #legal
+    matrizZeroB[bordas - 1][bordas:tamzA - bordas] = b[0][:]
+    #legal
+    matrizZeroB[linhasMatrizImagem + bordas][bordas:tamzA - bordas] = b[linhasMatrizImagem - 1][:] # até aqui tá certo
+    
+    #legal
+    #valores das linhas entre as arestas, aí em cima
+    index = 0
+    #valores das colunas
+    for i in range(bordas,linhasMatrizImagem+bordas):     
+        matrizZeroB[i][bordas - 1] = b[0][index]
+        
+        matrizZeroB[i][tamzA - bordas] = b[linhasMatrizImagem - 1][index]
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    
+    #valores das colunas, entre as arestas       
+        #matrizZeroB[i][colunasMatrizImagem + 1] = b[i-1][linhasMatrizImagem - 1]
+        #matrizZeroB[tamzA - bordas][i] = b[linhasMatrizImagem - 1][i-1]
+    #preenche as demais colunas
+    
+    index = 0
+    for i in range(bordas,linhasMatrizImagem+bordas):
+        #print(f'i:{i} bordas:{bordas}')
+        for j in range(0, bordas - 1):
+            matrizZeroB[i][j] = b[0][index]
+            if i == bordas:
+                matrizZeroB[i - 1][j] = matrizZeroB[i - 1][bordas - 1]
+                matrizZeroB[i - 1][(tamzA - bordas) + j + 1] = matrizZeroB[i - 1][(tamzA - bordas) + j]
+            if i == (linhasMatrizImagem + bordas) - 1:
+                matrizZeroB[linhasMatrizImagem + bordas][j] = matrizZeroB[linhasMatrizImagem + bordas][bordas - 1]
+                matrizZeroB[linhasMatrizImagem + bordas][(tamzA - bordas) + j + 1] = b[linhasMatrizImagem - 1][index]
+            #matrizZeroB[i][j] = matrizZeroB[i][bordas - 1]
+            matrizZeroB[i][(tamzA - bordas) + j + 1] = b[linhasMatrizImagem - 1][index]
+       
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    
+    #preenche as demais colunas, aí em cima
+    index = 1
+    while index < bordas:
+        matrizZeroB[:index][:] = matrizZeroB[bordas - 1][:]
+        matrizZeroB[(linhasMatrizImagem + bordas + index)][:] = matrizZeroB[linhasMatrizImagem + bordas][:]
+        
+        index += 1
+    
+    #PARA b FOI AÍ EM CIMA
+     #valores das arestas
+    matrizZeroR[bordas-1][bordas - 1] = r[0][0]#legal
+    matrizZeroR[(tamzL - bordas)][bordas-1] = r[linhasMatrizImagem - 1][0]#legal
+    matrizZeroR[bordas-1][colunasMatrizImagem + bordas] = r[0][colunasMatrizImagem - 1]#legal
+    matrizZeroR[(linhasMatrizImagem + bordas)][(colunasMatrizImagem + bordas)] = r[linhasMatrizImagem - 1][colunasMatrizImagem - 1]#legal
+    #valores das arestas, aí em cima
+    
+    #valores das linhas entre as arestas
+    #legal
+    matrizZeroR[bordas - 1][bordas:tamzA - bordas] = r[0][:]
+    #legal
+    matrizZeroR[linhasMatrizImagem + bordas][bordas:tamzA - bordas] = r[linhasMatrizImagem - 1][:]
+    #legal
+    #valores das linhas entre as arestas, aí em cima
+    index = 0
+    #valores das colunas
+    for i in range(bordas,linhasMatrizImagem+bordas):      
+        matrizZeroR[i][bordas - 1] = r[0][index]
+        matrizZeroR[i][tamzA - bordas] = r[linhasMatrizImagem - 1][index]
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    
+    index = 0
+    for i in range(bordas,linhasMatrizImagem+bordas):
+        #print(f'i:{i} bordas:{bordas}')
+        for j in range(0, bordas - 1):
+            matrizZeroR[i][j] = b[0][index]
+            if i == bordas:
+                matrizZeroR[i - 1][j] = matrizZeroR[i - 1][bordas - 1]
+                matrizZeroR[i - 1][(tamzA - bordas) + j + 1] = matrizZeroR[i - 1][(tamzA - bordas) + j]
+            if i == (linhasMatrizImagem + bordas) - 1:
+                matrizZeroR[linhasMatrizImagem + bordas][j] = matrizZeroR[linhasMatrizImagem + bordas][bordas - 1]
+                matrizZeroR[linhasMatrizImagem + bordas][(tamzA - bordas) + j + 1] = r[linhasMatrizImagem - 1][index]
+            #matrizZeroB[i][j] = matrizZeroB[i][bordas - 1]
+            matrizZeroR[i][(tamzA - bordas) + j + 1] = r[linhasMatrizImagem - 1][index]
+       
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    
+    #preenche as demais colunas, aí em cima
+    index = 1
+    while index < bordas:
+        matrizZeroR[:index][:] = matrizZeroR[bordas - 1][:]
+        matrizZeroR[(linhasMatrizImagem + bordas + index)][:] = matrizZeroR[linhasMatrizImagem + bordas][:]
+        
+        index += 1
+    #PARA R FOI AÍ EM CIMA
+     #valores das arestas
+    matrizZeroG[bordas-1][bordas - 1] = g[0][0]#legal
+    matrizZeroG[(tamzL - bordas)][bordas-1] = g[linhasMatrizImagem - 1][0]#legal
+    matrizZeroG[bordas-1][colunasMatrizImagem + bordas] = g[0][colunasMatrizImagem - 1]#legal
+    matrizZeroG[(linhasMatrizImagem + bordas)][(colunasMatrizImagem + bordas)] = g[linhasMatrizImagem - 1][colunasMatrizImagem - 1]#legal
+    #valores das arestas, aí em cima
+    
+    #valores das linhas entre as arestas
+    #legal
+    matrizZeroG[bordas - 1][bordas:tamzA - bordas] = g[0][:]
+    #legal
+    matrizZeroG[linhasMatrizImagem + bordas][bordas:tamzA - bordas] = g[linhasMatrizImagem - 1][:]
+    #legal
+    #valores das linhas entre as arestas, aí em cima
+    index = 0
+    #valores das colunas
+    for i in range(bordas,linhasMatrizImagem+bordas):      
+        matrizZeroG[i][bordas - 1] = g[0][index]
+        matrizZeroG[i][tamzA - bordas] = g[linhasMatrizImagem - 1][index]
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    #valores das colunas, entre as arestas       
+        #matrizZeroB[i][colunasMatrizImagem + 1] = b[i-1][linhasMatrizImagem - 1]
+        #matrizZeroB[tamzA - bordas][i] = b[linhasMatrizImagem - 1][i-1]
+    #preenche as demais colunas
+    
+    index = 0
+    for i in range(bordas,linhasMatrizImagem+bordas):
+        #print(f'i:{i} bordas:{bordas}')
+        for j in range(0, bordas - 1):
+            matrizZeroG[i][j] = g[0][index]
+            if i == bordas:
+                matrizZeroG[i - 1][j] = matrizZeroG[i - 1][bordas - 1]
+                matrizZeroG[i - 1][(tamzA - bordas) + j + 1] = matrizZeroG[i - 1][(tamzA - bordas) + j]
+            if i == (linhasMatrizImagem + bordas) - 1:
+                
+                matrizZeroG[linhasMatrizImagem + bordas][j] = matrizZeroG[linhasMatrizImagem + bordas][bordas - 1]
+                matrizZeroG[linhasMatrizImagem + bordas][(tamzA - bordas) + j + 1] = g[linhasMatrizImagem - 1][index]
+            #matrizZeroB[i][j] = matrizZeroB[i][bordas - 1]
+            matrizZeroG[i][(tamzA - bordas) + j + 1] = g[linhasMatrizImagem - 1][index]
+       
+        index += 1
+        if index == colunasMatrizImagem:
+            index = 0
+    
+    #preenche as demais colunas, aí em cima
+    index = 1
+    while index < bordas:
+        matrizZeroG[:index][:] = matrizZeroG[bordas - 1][:]
+        matrizZeroG[(linhasMatrizImagem + bordas + index)][:] = matrizZeroG[linhasMatrizImagem + bordas][:]
+        
+        index += 1
+    #PARA G FOI AÍ EM CIMA
+    #---------------------------------------------------------------------------------------------------------
+    matrizZeroB = matrizComBordasZeradas(b, matrizZeroB, bordas, matrizZeroB.shape)
+    matrizZeroG = matrizComBordasZeradas(g, matrizZeroG, bordas, matrizZeroG.shape)
+    matrizZeroR = matrizComBordasZeradas(r, matrizZeroR, bordas, matrizZeroR.shape)
+
+    
+    matrizMediana = np.zeros(shape=(tamanhoFiltro * tamanhoFiltro)).astype(int)
+    #print(f'tamanho matriz mediana {matrizMediana}')
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            soma = 0
+            ind = 0
+            for p in range(0,ordemMatrizKernel):
+                z = j
+                
+                for v in range(0,ordemMatrizKernel):
+                    #print(f'indi {ind} | p {p} r {r}')
+                    matrizMediana[ind] = matrizZeroB[x][z]
+                    ind += 1                
+                    z += 1
+                   # print(matrizImagemParaFiltroB[x][z], end=' ')
+            
+                x += 1
+               # print()
+            matrizMediana = np.sort(matrizMediana, kind= 'mergesort')
+            #print(f'matrizMediana tem valores {matrizMediana}')
+            mediana = np.median(matrizMediana).astype(int)
+           # print(f'a mediana é {mediana} {i}{j}')
+            b[i][j] = mediana
+            #exit()
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            soma = 0
+            ind = 0
+            for p in range(0,ordemMatrizKernel):
+                z = j
+               
+                for v in range(0,ordemMatrizKernel):
+                    matrizMediana[ind] = matrizZeroG[x][z]
+                    ind += 1                
+                    z += 1
+            
+                x += 1
+            matrizMediana = np.sort(matrizMediana, kind= 'mergesort')
+            mediana = np.median(matrizMediana).astype(int)
+            g[i][j] = mediana
+    
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            soma = 0
+            ind = 0
+            for p in range(0,ordemMatrizKernel):
+                z = j
+               
+                for v in range(0,ordemMatrizKernel):
+                    matrizMediana[ind] = matrizZeroR[x][z]
+                    ind += 1                
+                    z += 1
+            
+                x += 1
+            matrizMediana = np.sort(matrizMediana, kind= 'mergesort')
+            mediana = np.median(matrizMediana).astype(int)
+            
+            r[i][j] = mediana
+           # print(f'medina {mediana} i {i}')
+    return cv2.merge((b, g, r))
+
+
 def apply_filter(filter_type):
     #print(f'tamanho da matriz: {img_cv.shape}')
     if img_cv is None:
@@ -216,7 +480,7 @@ def apply_filter(filter_type):
     
     if filter_type == "low_pass":
        
-        filtered_img = filtroGaussiano(5,10)
+        filtered_img = filtroGaussiano(7,50)
         
        
         #filtered_img = img_cv
