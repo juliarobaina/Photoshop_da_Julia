@@ -78,7 +78,7 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
             if pixelNovo > 255: #normalização, pixels variam de 0-255
                 filtered_img[i][j] = 255
             else:
-                 filtered_img[i][j] = pixelNovo
+                filtered_img[i][j] = pixelNovo
            
     
     return filtered_img
@@ -330,21 +330,16 @@ def kernelGaussiano(tamanho:int):
     
     return kernel, divisor
 
-def kernelLaplacianoDaGaussiana():
-    kernel = np.array([
-            [0, 0, -1, 0, 0],
-            [0, -1, -2, -1, 0],
-            [-1, -2, 16, -2, -1],
-            [0, -1, -2, -1, 0],
-            [0, 0, -1, 0, 0]
-           
-             ])
+def kernelLaplaciano():
+    kernel = np.array([[-1, -1, -1],
+                      [-1, 8, -1],
+                      [-1, -1, -1]])
     return kernel
 
 def filtroSobel():
-    f = filtroGaussiano(3)
+    imgGaussiano = filtroGaussiano(3)
 
-    matrizCinza = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+    matrizCinza = cv2.cvtColor(imgGaussiano, cv2.COLOR_BGR2GRAY)
     
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
@@ -374,16 +369,16 @@ def filtroSobel():
    
     return matrizCinza
 
-def filtroLaplacianoDaGaussiana():
-    #f = filtroGaussiano(3)
+def filtroLaplaciano():
+    imgGaussiano = filtroGaussiano(3)
 
-    matrizCinza = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+    matrizCinza = cv2.cvtColor(imgGaussiano, cv2.COLOR_BGR2GRAY)
     
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
-    kernel = kernelLaplacianoDaGaussiana()
+    kernel = kernelLaplaciano()
    
-    ordemMatrizKernel = 5
+    ordemMatrizKernel = 3
     bordas = ordemMatrizKernel // 2
   
    
@@ -402,7 +397,7 @@ def apply_filter(filter_type):
     if filter_type == "low_pass":
 
     
-        filtered_img = filtroMedia(7)
+        filtered_img = filtroLaplaciano()
         
        
         #filtered_img = img_cv
@@ -449,6 +444,14 @@ filters_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Filters", menu=filters_menu)
 filters_menu.add_command(label="Low Pass Filter", command=lambda: apply_filter("low_pass"))
 filters_menu.add_command(label="High Pass Filter", command=lambda: apply_filter("high_pass"))
+
+#menu com 2 níveis
+'''filters_menu2 = tk.Menu(menu_bar, tearoff=0)
+filters_menu3.add_cascade(label="Filters 2", menu=filters_menu2)
+filters_menu3 = tk.Menu(filters_menu3, tearoff=0)
+filters_menu3.add_cascade(label="Filtro Passa-Baixa", menu=filters_menu3)
+filters_menu3.add_cascade(label="Média", command=lambda: apply_filter("low_pass"))
+filters_menu3.add_command(label="3 x 3", command=load_image)'''
 
 # Cria a canvas para a imagem original com borda (sem background)
 original_image_canvas = tk.Canvas(root, width=500, height=500, bg="#2e2e2e", highlightthickness=1, highlightbackground="white")
