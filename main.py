@@ -15,6 +15,7 @@ def load_image():
 
 def display_image(img, original=False):
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    global img_pil
     img_pil = Image.fromarray(img_rgb)
     
     # Obtém o tamanho da imagem original
@@ -38,6 +39,9 @@ def display_image(img, original=False):
         edited_image_canvas.delete("all")  # Limpa a canvas
         edited_image_canvas.image = img_tk
         edited_image_canvas.create_image(x_offset, y_offset, anchor=tk.NW, image=img_tk)
+        
+        
+
 
 #insere paddings zerados
 def matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem):
@@ -394,27 +398,85 @@ def apply_filter(filter_type):
     if img_cv is None:
         return
     
-    if filter_type == "low_pass":
+    match filter_type:
+        case 'media3':
+            filtered_img = filtroMedia(3)
+
+        case 'media5':
+            filtered_img = filtroMedia(5)
+
+        case 'media7':
+            filtered_img = filtroMedia(7)
+
+        case 'gaussiano3':
+            filtered_img = filtroGaussiano(3)
+
+        case 'gaussiano5':
+            filtered_img = filtroGaussiano(5)
+
+        case 'gaussiano7':
+            filtered_img = filtroGaussiano(7)
+
+        case 'mediana3':
+            filtered_img = filtroMediana(3)
+
+        case 'mediana5':
+            filtered_img = filtroMediana(5)
+
+        case 'mediana7':
+            filtered_img = filtroMediana(7)
+
+        case 'sobel':
+            filtered_img = filtroSobel()
+
+        case 'laplaciano':
+            filtered_img = filtroLaplaciano()
+        
+    display_image(filtered_img, original=False)  # Exibe a imagem editada
+
+    
+    '''if filter_type == "low_pass":
 
     
         filtered_img = filtroLaplaciano()
         
        
-        #filtered_img = img_cv
-        #print(img_cv.shape)
-        #print(filtered_img)
+        filtered_img = img_cv
+        print(img_cv.shape)
+        print(filtered_img)
        
-        #filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
-        #filtered_img = cv2.GaussianBlur(img_cv, (15, 15), 0)
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
+        filtered_img = cv2.GaussianBlur(img_cv, (15, 15), 0)
     elif filter_type == "high_pass":
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
         filtered_img = cv2.Laplacian(gray, cv2.CV_64F)
         filtered_img = cv2.convertScaleAbs(filtered_img)
-        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
-    display_image(filtered_img, original=False)  # Exibe a imagem editada
+        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)'''
 
 def refresh_canvas():
     edited_image_canvas.delete("all")  # Limpa a canvas para exibir a nova imagem
+
+
+def salvarImagem():
+        
+    if img_pil is None:
+        popup = tk.Toplevel()
+        popup.geometry("240x60")
+        popup.resizable(0,0)
+        popup.wm_title('Operação Inválida')
+        label = tk.Label(popup, text='Operação Inválida, Edite a imagem')
+        label.grid(row=0,column=3)
+       # b = tk.Button(j, text='Fechar', command=j.destroy)
+       # b.grid(row=1, column=0)
+    
+    else:
+        nomeArquivo = filedialog.asksaveasfile(mode='w', defaultextension='jpg')
+   
+        if nomeArquivo is None:
+            return
+   
+        img_pil.save(nomeArquivo)
+
 
 # Definindo a GUI
 root = tk.Tk()
@@ -427,31 +489,55 @@ root.geometry("1085x550")
 root.config(bg="#2e2e2e")
 
 img_cv = None
-
+img_pil = None
 # Cria o menu da aplicação
 menu_bar = tk.Menu(root)
 root.config(menu=menu_bar)
 
-# File menu
+#carregar imagem # File menu
 file_menu = tk.Menu(menu_bar, tearoff=0)
-menu_bar.add_cascade(label="File", menu=file_menu)
-file_menu.add_command(label="Load Image", command=load_image)
-file_menu.add_separator()
-file_menu.add_command(label="Exit", command=root.quit)
+menu_bar.add_cascade(label="Arquivo", menu=file_menu)
+file_menu.add_command(label="Carregar Imagem", command=load_image)
+file_menu.add_command(label="Salvar Imagem", command=salvarImagem)
 
+#file_menu.add_separator()
+#file_menu.add_command(label="Exit", command=root.quit)
+
+#Filtros Passa-Baixa
+media_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Filtro Média", menu=media_menu)
+media_menu.add_command(label="3x3", command=lambda: apply_filter("media3"))
+media_menu.add_command(label="5x5", command=lambda: apply_filter("media5"))
+media_menu.add_command(label="7x7", command=lambda: apply_filter("media7"))
+
+gaussiano_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Filtro Gaussiano", menu=gaussiano_menu)
+gaussiano_menu.add_command(label="3x3", command=lambda: apply_filter("gaussiano3"))
+gaussiano_menu.add_command(label="5x5", command=lambda: apply_filter("gaussiano5"))
+gaussiano_menu.add_command(label="7x7", command=lambda: apply_filter("gaussiano7"))
+
+mediana_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Filtro Mediana", menu=mediana_menu)
+mediana_menu.add_command(label="3x3", command=lambda: apply_filter("mediana3"))
+mediana_menu.add_command(label="5x5", command=lambda: apply_filter("mediana5"))
+mediana_menu.add_command(label="7x7", command=lambda: apply_filter("mediana7"))
+
+#Para Filtro Passa-Alta
+menu_bar.add_command(label="Filtro Sobel", command=lambda: apply_filter("sobel"))
+menu_bar.add_command(label="Filtro Laplaciano", command=lambda: apply_filter("laplaciano"))
+
+
+
+
+
+
+'''
 # Filters menu
 filters_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Filters", menu=filters_menu)
 filters_menu.add_command(label="Low Pass Filter", command=lambda: apply_filter("low_pass"))
-filters_menu.add_command(label="High Pass Filter", command=lambda: apply_filter("high_pass"))
+filters_menu.add_command(label="High Pass Filter", command=lambda: apply_filter("high_pass"))'''
 
-#menu com 2 níveis
-'''filters_menu2 = tk.Menu(menu_bar, tearoff=0)
-filters_menu3.add_cascade(label="Filters 2", menu=filters_menu2)
-filters_menu3 = tk.Menu(filters_menu3, tearoff=0)
-filters_menu3.add_cascade(label="Filtro Passa-Baixa", menu=filters_menu3)
-filters_menu3.add_cascade(label="Média", command=lambda: apply_filter("low_pass"))
-filters_menu3.add_command(label="3 x 3", command=load_image)'''
 
 # Cria a canvas para a imagem original com borda (sem background)
 original_image_canvas = tk.Canvas(root, width=500, height=500, bg="#2e2e2e", highlightthickness=1, highlightbackground="white")
