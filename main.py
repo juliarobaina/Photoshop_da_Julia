@@ -40,7 +40,20 @@ def display_image(img, original=False):
         edited_image_canvas.image = img_tk
         edited_image_canvas.create_image(x_offset, y_offset, anchor=tk.NW, image=img_tk)
         
-        
+
+def escalaDeCinza(img):
+    b,g,r = cv2.split(img_cv)
+
+    l, c = b.shape
+   
+    cinza = np.zeros(shape=(l,c))
+    cinza = 0.11 * b + 0.59 * g + 0.3 * r
+    cinza = cinza.astype(np.uint8)
+
+    print(cinza.shape)
+   
+    return cinza
+    
 
 
 #insere paddings zerados
@@ -83,14 +96,13 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
                 filtered_img[i][j] = 255
             else:
                 filtered_img[i][j] = pixelNovo
-           
-    
+   
     return filtered_img
 
-def filtroMedia(tamanhoKernel:int):#blur
+def filtroMedia(tamanhoKernel:int):#blur    
     
     b,g,r = cv2.split(img_cv)
-     
+    
     linhasMatrizImagem, colunasMatrizImagem = r.shape    
 
     kernel, divisor = kernelMedia(tamanhoKernel)
@@ -105,13 +117,13 @@ def filtroMedia(tamanhoKernel:int):#blur
 
     matrizImagemParaFiltro = matrizComBordasZeradas(r, bordas, linhasMatrizImagem, colunasMatrizImagem)
     r = convolucao(r,matrizImagemParaFiltro,kernel,tamanhoKernel,linhasMatrizImagem,colunasMatrizImagem, divisor)
-    
+ 
     return cv2.merge((b, g, r))
    
 def filtroGaussiano(tamanhoKernel:int):
-   
+    
     b,g,r = cv2.split(img_cv)
-     
+    
     linhasMatrizImagem, colunasMatrizImagem = r.shape 
    
     #sigma:float é parâmetro da função
@@ -148,7 +160,7 @@ def filtroGaussiano(tamanhoKernel:int):
 
     matrizImagemParaFiltro = matrizComBordasZeradas(r, bordas, linhasMatrizImagem, colunasMatrizImagem)
     r = convolucao(r,matrizImagemParaFiltro,kernel,tamanhoKernel,linhasMatrizImagem,colunasMatrizImagem, divisor)
-    
+   
     return cv2.merge((b, g, r))
 
 def matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem):
@@ -234,9 +246,9 @@ def convolucaoMediana(matriz, matrizBordasGemeas, tamanhoKernel, linhasMatrizIma
             matriz[i][j] = mediana
 
 def filtroMediana(tamanhoKernel:int):
-
-    b,g,r = cv2.split(img_cv)
     
+    b,g,r = cv2.split(img_cv)
+
     linhasMatrizImagem, colunasMatrizImagem = r.shape 
     bordas = tamanhoKernel // 2
     
@@ -248,7 +260,7 @@ def filtroMediana(tamanhoKernel:int):
     convolucaoMediana(b,matrizComBordasGemeasB,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
     convolucaoMediana(g,matrizComBordasGemeasG,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
     convolucaoMediana(r,matrizComBordasGemeasR,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
-   
+
     return cv2.merge((b, g, r))
 
 
@@ -343,8 +355,8 @@ def kernelLaplaciano():
 def filtroSobel():
     imgGaussiano = filtroGaussiano(3)
 
-    matrizCinza = cv2.cvtColor(imgGaussiano, cv2.COLOR_BGR2GRAY)
-    
+    matrizCinza = escalaDeCinza(imgGaussiano)
+   
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
     kernelHorizontal, kernelVertical = kernelSobel()
@@ -376,8 +388,8 @@ def filtroSobel():
 def filtroLaplaciano():
     imgGaussiano = filtroGaussiano(3)
 
-    matrizCinza = cv2.cvtColor(imgGaussiano, cv2.COLOR_BGR2GRAY)
-    
+    matrizCinza = escalaDeCinza(imgGaussiano)
+
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
     kernel = kernelLaplaciano()
@@ -390,7 +402,7 @@ def filtroLaplaciano():
    
     matrizImagemParaFiltro = matrizComBordasZeradas(matrizCinza, bordas, linhasMatrizImagem, colunasMatrizImagem)
     b = convolucao(matrizCinza,matrizImagemParaFiltro,kernel,ordemMatrizKernel,linhasMatrizImagem,colunasMatrizImagem,divisao)
-    
+   
     return b
     
 def apply_filter(filter_type):
@@ -480,7 +492,7 @@ def salvarImagem():
 
 # Definindo a GUI
 root = tk.Tk()
-root.title("Image Processing App")
+root.title("Photoshop da Julia")
 
 # Define o tamanho da janela da aplicação 1200x800
 root.geometry("1085x550")
