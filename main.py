@@ -50,8 +50,6 @@ def escalaDeCinza(img):
     cinza = 0.11 * b + 0.59 * g + 0.3 * r
     cinza = cinza.astype(np.uint8)
 
-    print(cinza.shape)
-   
     return cinza
     
 
@@ -90,7 +88,7 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
                
                 x += 1
             
-            pixelNovo = abs(floor(soma / divisor)) #abs é para o sobel, talvez todos passa-alta
+            pixelNovo = abs(floor(soma / divisor)) 
            
             if pixelNovo > 255: #normalização, pixels variam de 0-255
                 filtered_img[i][j] = 255
@@ -99,7 +97,7 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
    
     return filtered_img
 
-def filtroMedia(tamanhoKernel:int):#blur    
+def filtroMedia(tamanhoKernel:int):    
     
     b,g,r = cv2.split(img_cv)
     
@@ -125,33 +123,11 @@ def filtroGaussiano(tamanhoKernel:int):
     b,g,r = cv2.split(img_cv)
     
     linhasMatrizImagem, colunasMatrizImagem = r.shape 
-   
-    #sigma:float é parâmetro da função
-    #tamanho acho que só pode ser ímpar, relembrar
-    #criar fórmula do gaussiano 
-    #montar matriz
-    #funcaoG = (1 / (2 * np.pi * (sigma ** 2))) * (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
-    #depois de um valor o filtro para de incrementar o blur, valores ficam iguais após divisão. É porque os valores ficam muito pequenos e o floor arredonda tudo pro mesmo número. Mesmo não usando floor as diferenças são tão pequenas que são imperceptíveis
-    '''kernel = np.zeros(shape=(tamanhoFiltro,tamanhoFiltro))
-   # print(kernel.dtype)
-    soma = 0
-    for x in range(0,tamanhoFiltro):
-        for y in range(0, tamanhoFiltro):
-            kernel[x][y] = (np.e ** ((-1*((x ** 2) + (y ** 2))) / (2 * (sigma ** 2))))
-            soma += kernel[x][y]
-    
-    print(kernel)
-    for x in range(0,tamanhoFiltro):
-        for y in range(0, tamanhoFiltro):
-            kernel[x][y] /= soma'''
-
     
     kernel, divisor = kernelGaussiano(tamanhoKernel)
     
     bordas = tamanhoKernel // 2
    
-    #matrizZero = np.zeros(shape=(linhasMatrizImagem+(bordas*2),colunasMatrizImagem+(bordas*2))).astype(int)
-
     matrizImagemParaFiltro = matrizComBordasZeradas(b, bordas, linhasMatrizImagem, colunasMatrizImagem)
     b = convolucao(b,matrizImagemParaFiltro,kernel,tamanhoKernel,linhasMatrizImagem,colunasMatrizImagem,divisor)
 
@@ -172,15 +148,13 @@ def matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImage
     matrizParaMediana[(tamzL - bordas)][bordas-1] = matriz[linhasMatrizImagem - 1][0]
     matrizParaMediana[bordas-1][colunasMatrizImagem + bordas] = matriz[0][colunasMatrizImagem - 1]
     matrizParaMediana[(linhasMatrizImagem + bordas)][(colunasMatrizImagem + bordas)] = matriz[linhasMatrizImagem - 1][colunasMatrizImagem - 1]
-    #valores das arestas, aí em cima
     
     #valores das linhas entre as arestas
     matrizParaMediana[bordas - 1][bordas:tamzA - bordas] = matriz[0][:]
     matrizParaMediana[linhasMatrizImagem + bordas][bordas:tamzA - bordas] = matriz[linhasMatrizImagem - 1][:]
-  
-    #valores das linhas entre as arestas, aí em cima
 
     index = 0
+
     #valores das colunas
     for i in range(bordas,linhasMatrizImagem+bordas):     
         matrizParaMediana[i][bordas - 1] = matrizParaMediana[i][bordas]
@@ -210,8 +184,8 @@ def matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImage
         if index == linhasMatrizImagem - 1:
             index = 0
     
-    #preenche as demais colunas, aí em cima
     index = 1
+    
     while index < bordas:
         matrizParaMediana[:index][:] = matrizParaMediana[bordas - 1][:]
         matrizParaMediana[(linhasMatrizImagem + bordas + index)][:] = matrizParaMediana[linhasMatrizImagem + bordas][:]
@@ -220,7 +194,7 @@ def matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImage
 
     return matrizParaMediana
 
-def convolucaoMediana(matriz, matrizBordasGemeas, tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem):
+def mediana(matriz, matrizBordasGemeas, tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem):
     matrizMediana = np.zeros(shape = (tamanhoKernel * tamanhoKernel)).astype(int)
     
     for i in range(0, linhasMatrizImagem):
@@ -257,23 +231,23 @@ def filtroMediana(tamanhoKernel:int):
     matrizComBordasGemeasR = matrizComBordasGemeas(r, bordas, linhasMatrizImagem, colunasMatrizImagem)
 
   
-    convolucaoMediana(b,matrizComBordasGemeasB,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
-    convolucaoMediana(g,matrizComBordasGemeasG,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
-    convolucaoMediana(r,matrizComBordasGemeasR,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
+    mediana(b,matrizComBordasGemeasB,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
+    mediana(g,matrizComBordasGemeasG,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
+    mediana(r,matrizComBordasGemeasR,tamanhoKernel, linhasMatrizImagem, colunasMatrizImagem)
 
     return cv2.merge((b, g, r))
 
 
 def kernelSobel():
     
-    kernelHorizontal = [[-1, -2, -1],
+    kernelHorizontal = np.array([[-1, -2, -1],
                     [0, 0, 0],
                     [1, 2, 1]
-                    ]
-    kernelVertical = [[-1, 0, 1],
+                    ])
+    kernelVertical = np.array([[-1, 0, 1],
                     [-2, 0, 2],
                     [-1, 0, 1]
-                    ]
+                    ])
     return kernelHorizontal, kernelVertical
 
 def kernelMedia(tamanho:int):
@@ -315,18 +289,18 @@ def kernelMedia(tamanho:int):
 
 def kernelGaussiano(tamanho:int):
     if tamanho == 3:
-        kernel = [[1, 2, 1],
+        kernel = np.array([[1, 2, 1],
                   [2, 4, 2],
-                  [1, 2, 1]]
+                  [1, 2, 1]])
         divisor = 16
 
     elif tamanho == 5:
-        kernel = [[1, 4, 7, 4, 1],
+        kernel = np.array([[1, 4, 7, 4, 1],
                   [4, 16, 26, 16, 4],
                   [7, 26, 41, 26, 7],
                   [4, 16, 26, 16, 4],
                   [1, 4, 7, 4, 1]
-                ]
+                ])
         divisor = 273
 
     elif tamanho == 7:
@@ -397,7 +371,6 @@ def filtroLaplaciano():
     ordemMatrizKernel = 3
     bordas = ordemMatrizKernel // 2
   
-   
     divisao = 1
    
     matrizImagemParaFiltro = matrizComBordasZeradas(matrizCinza, bordas, linhasMatrizImagem, colunasMatrizImagem)
@@ -406,7 +379,6 @@ def filtroLaplaciano():
     return b
     
 def apply_filter(filter_type):
-    #print(f'tamanho da matriz: {img_cv.shape}')
     if img_cv is None:
         return
     
@@ -446,25 +418,6 @@ def apply_filter(filter_type):
         
     display_image(filtered_img, original=False)  # Exibe a imagem editada
 
-    
-    '''if filter_type == "low_pass":
-
-    
-        filtered_img = filtroLaplaciano()
-        
-       
-        filtered_img = img_cv
-        print(img_cv.shape)
-        print(filtered_img)
-       
-        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)
-        filtered_img = cv2.GaussianBlur(img_cv, (15, 15), 0)
-    elif filter_type == "high_pass":
-        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-        filtered_img = cv2.Laplacian(gray, cv2.CV_64F)
-        filtered_img = cv2.convertScaleAbs(filtered_img)
-        filtered_img = cv2.cvtColor(filtered_img, cv2.COLOR_GRAY2BGR)'''
-
 def refresh_canvas():
     edited_image_canvas.delete("all")  # Limpa a canvas para exibir a nova imagem
 
@@ -478,8 +431,6 @@ def salvarImagem():
         popup.wm_title('Operação Inválida')
         label = tk.Label(popup, text='Operação Inválida, Edite a imagem')
         label.grid(row=0,column=3)
-       # b = tk.Button(j, text='Fechar', command=j.destroy)
-       # b.grid(row=1, column=0)
     
     else:
         nomeArquivo = filedialog.asksaveasfile(mode='w', defaultextension='jpg')
@@ -538,17 +489,6 @@ mediana_menu.add_command(label="7x7", command=lambda: apply_filter("mediana7"))
 menu_bar.add_command(label="Filtro Sobel", command=lambda: apply_filter("sobel"))
 menu_bar.add_command(label="Filtro Laplaciano", command=lambda: apply_filter("laplaciano"))
 
-
-
-
-
-
-'''
-# Filters menu
-filters_menu = tk.Menu(menu_bar, tearoff=0)
-menu_bar.add_cascade(label="Filters", menu=filters_menu)
-filters_menu.add_command(label="Low Pass Filter", command=lambda: apply_filter("low_pass"))
-filters_menu.add_command(label="High Pass Filter", command=lambda: apply_filter("high_pass"))'''
 
 
 # Cria a canvas para a imagem original com borda (sem background)
