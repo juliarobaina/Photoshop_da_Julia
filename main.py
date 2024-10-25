@@ -4,6 +4,7 @@ import cv2
 from PIL import Image, ImageTk
 import numpy as np
 from math import floor
+from matplotlib import pyplot as plt#do histograma func
 
 def load_image():
     global img_cv
@@ -378,16 +379,420 @@ def filtroLaplaciano():
    
     return b
     
+def limiarizacaoGlobal(usuarioT):
+    
+    matrizCinza = escalaDeCinza(img_cv)
+   
+    linhasMatriz, colunasMatriz = matrizCinza.shape 
+    #t = valorThresholding(usuarioT, matrizCinza, linhasMatriz, colunasMatriz)
+    t = usuarioT
+    for i in range(0, linhasMatriz):
+            for j in range(0, colunasMatriz):
+                if matrizCinza[i][j] > t: 
+                    matrizCinza[i][j] = 255
+                else:
+                    matrizCinza[i][j] = 0
+    
+    return matrizCinza
+
+def valorThresholding(usuarioT:int, matriz,linhasMatriz, colunasMatriz):
+    criterioParada = 256
+   
+    t = 0
+    soma = np.sum(matriz)
+    '''for i in range(0, linhasMatriz):
+        for j in range(0, colunasMatriz):
+            soma += matriz[i][j]'''
+    print(soma)
+    t = floor(soma / (linhasMatriz * colunasMatriz)) #valor de thredshold
+    p=0
+    print(f'thredshold {t}')
+    
+    while(criterioParada > usuarioT): #
+        
+        g1 = 0 #valores maiores que t
+        g1 = np.uint(g1)
+        g2 = 0 #valores menores ou iguais a t
+        g2 = np.uint(g2)
+        tamG1 = 0
+        tamG2 = 0
+      
+        
+        
+        ''' for i in range(0, linhasMatriz):
+            for j in range(0, colunasMatriz):
+                print(matriz[i][j], end=' ')
+            print()'''
+       
+
+        for i in range(0, linhasMatriz):
+            for j in range(0, colunasMatriz):
+                if matriz[i][j] > t:
+                    g1 += matriz[i][j]
+                    tamG1 += 1
+                  #  print(f'estou no maior', end=' ')
+                else:
+                    g2 += matriz[i][j]
+                    tamG2 += 1
+                   
+
+        
+        if g1 == 0:
+            u1 = 0
+        else:
+            u1 = g1 / tamG1
+        if g2 == 0:
+            u2 = 0
+        else:
+            u2 = g2 / tamG2
+            
+        novoT = (u1 + u2) / 2
+        novoT = floor(novoT)
+       
+        criterioParada = abs(t - novoT)
+        p=t
+        t = novoT
+        '''if criterioParada == 0:
+            print(f'valor novo de t {criterioParada}')
+            break'''
+        print(f'valor novo de criterioParada {criterioParada}')
+
+    return t
+
+def metodoOtsu():
+  
+    matrizCinza = escalaDeCinza(img_cv)
+   
+    linhasMatriz, colunasMatriz = matrizCinza.shape 
+
+    intensidades = np.zeros(shape=(256),dtype=float)#0-255
+    
+    for i in range(0,linhasMatriz):
+        for j in range(0,colunasMatriz):
+            intensidades[matrizCinza[i][j]] += 1 #Ex: o valor 255 apareceu 20x, intensidades[255] += 1 vinte vezes
+    
+    dic = {}
+   
+    #normalizando o histograma (Pi)
+    for i in range(0,256):
+        intensidades[i] /= (linhasMatriz * colunasMatriz)
+        if intensidades[i] != 0:
+            dic[i] = intensidades[i]
+          
+    tamanhoDic = 0
+    for key in dic.keys():
+        tamanhoDic+=1
+   
+    vetorFreq = np.zeros(shape=(tamanhoDic),dtype=float)
+    vetorVal = np.zeros(shape=(tamanhoDic),dtype=float)
+    cont = 0
+
+    for key in dic.keys():
+        vetorFreq[cont] = dic[key] #frequência
+        vetorVal[cont] = key #valor
+        cont+=1
+
+    N = vetorFreq.sum()
+    maior = 0
+    t = 0
+    for i in range(0, len(vetorVal)):
+        if i == 0:
+            wb = 0
+            ub = 0
+            wf = vetorFreq.sum() / N
+            somaPonderada = 0
+            for j in range(0, len(vetorFreq)):
+                somaPonderada += vetorFreq[j] * vetorVal[j]
+            uf = somaPonderada / vetorFreq.sum()
+            sigma = wb * wf * pow((ub - uf), 2)
+            if sigma > maior:
+                maior = sigma
+                t = vetorVal[i]
+        else:
+            wf = vetorFreq[i:len(vetorFreq)].sum() / N
+            wb = vetorFreq[0:i].sum() / N
+            somaPonderada = 0
+
+            for j in range(i, len(vetorFreq)):
+                somaPonderada += vetorFreq[j] * vetorVal[j]
+            uf = somaPonderada / vetorFreq[i:len(vetorFreq)].sum()
+
+            somaPonderada = 0
+            for j in range(0, i):
+                somaPonderada += vetorFreq[j] * vetorVal[j]
+            ub = somaPonderada / vetorFreq[0:i].sum()
+
+            sigma = wb * wf * pow((ub - uf), 2)
+
+            if sigma > maior:
+                maior = sigma
+                t = vetorVal[i]
+    return t
+
+
+    
+
+    '''tentativa 4 - do github
+    n_t = intensidades
+    sum = 0
+    for i in range(0,256):
+        sum += i * n_t[i]
+    N = linhasMatriz * colunasMatriz
+    variance = 0               
+    bestVariance = 0
+
+    mean_bg = 0
+    weight_bg = 0
+
+    mean_fg = sum / N  
+    weight_fg = N                    
+
+    diff_means = 0
+    RADIX = 256
+    t = 0
+    while (t < RADIX):
+       
+        diff_means = mean_fg - mean_bg
+        variance = weight_bg * weight_fg * diff_means * diff_means
+
+        
+        if (variance > bestVariance):
+            bestVariance = variance
+            threshold = t
+        
+        
+        while (t < RADIX and n_t[t] == 0):
+            t+=1
+        if t == 256:
+            t = 255
+        mean_bg = (mean_bg * weight_bg + n_t[t] * t) / (weight_bg + n_t[t])
+        mean_fg = (mean_fg * weight_fg - n_t[t] * t) / (weight_fg - n_t[t])
+        weight_bg += n_t[t]
+        weight_fg -= n_t[t]
+        t+=1
+    
+    return threshold'''
+    '''tentativa 3
+    maximo = 0
+    sigma = np.zeros(shape=(256),dtype=float)
+    sigma[0] = 0
+    mu1 = np.dtype(np.float64)
+    mu1 = 0
+    mu2 = np.dtype(np.float64)
+    mu2 = 0
+    threshold = 0
+    for t in range(1,256):
+        p1 = intensidades[0:i].sum()
+        p2 = intensidades[((i+1)):256].sum()
+        
+        for i in range(0,len(intensidades[0:i])):
+            if p1 == 0:
+                continue
+            mu1 += ((i * intensidades[i]) / p1)
+            
+        for i in range(0, len(intensidades[((i+1)):256])):
+            if p2 == 0:
+                continue
+            mu2 += (i * intensidades[i]) / p2
+        
+        #print(f'm1={type(mu1)}-m2={mu2}')
+
+        sigma[t] = p1 * p2 * pow((mu1 - mu2),2)
+        #print( p1 * p2 * pow((mu1 - mu2),2))
+        #print('sigma t ai em cima')
+        if sigma[t] > maximo:
+            maximo = sigma[t]
+            threshold = t - 1
+
+    print(threshold)
+    return threshold
+    '''
+
+    '''
+    #tentativa 2
+    maior = 0
+    t = 0
+    #iteracao 0
+    wb = 0
+    wf = intensidades.sum()/(linhasMatriz * colunasMatriz)
+    ub = 0
+    uf = 0
+    somaPeso = 0
+    for j in range(0,256):
+        uf += intensidades[j] * j
+        somaPeso += j
+    uf /= somaPeso
+
+    sigmaB = np.zeros(shape=(256),dtype=float)
+    sigmaB[0] = ((wb * wf) * pow((ub - uf), 2))
+    
+    if sigmaB[0] > maior:
+        maior = sigmaB[0]
+        t = i
+    #iteracao 1
+    for i in range(1,256):
+        #iteracao 0
+        wb = 0
+        wf = intensidades.sum()/(linhasMatriz * colunasMatriz)
+        ub = 0
+        uf = 0
+        somaPeso = 0
+        for j in range(0,256):
+            uf += intensidades[j] * j
+            somaPeso += j
+        uf /= somaPeso
+
+        sigmaB = np.zeros(shape=(256),dtype=float)
+        sigmaB[0] = ((wb * wf) * pow((ub - uf), 2))
+
+        somaWB = intensidades[0:i]
+        
+        for j in range(0,len(somaWB)):
+            wb += somaWB[j]/len(somaWB)
+        
+        somaWF = intensidades[((i+1)):256]
+
+        for j in range(0,len(somaWF)):
+            wf += somaWF[j]/len(somaWF)
+
+
+        somaPeso = 0
+        for j in range(0,i):
+            ub += intensidades[j] * j
+            somaPeso += j
+        ub /= somaPeso
+
+        somaPeso = 0
+        for j in range(i+1,256):
+            uf += intensidades[j] * j
+            somaPeso += j
+        uf /= somaPeso
+
+
+        sigmaB[i] = ((wb * wf) * pow((ub - uf), 2))
+
+        if sigmaB[i] > maior:
+            maior = sigmaB[i]
+            t = i
+
+   
+    print(f'valor de t {t}') 
+    '''
+
+
+
+
+
+
+    '''
+    
+    #1ª tentativa
+    #média acumulada global
+    mediaG = 0
+    for i in range(0,256):
+        mediaG += (i * intensidades[i])
+    
+    #média de k
+    mediaK = []
+    mediaK.append(0 * intensidades[0])
+    piK = []
+    piK.append(intensidades[0])
+    for i in range(1, 256):
+        soma = 0
+        pi = 0
+        for j in range(0,i+1):
+            soma += (j*intensidades[j])
+            pi += intensidades[j]
+        
+        piK.append(pi)
+        mediaK.append(soma)
+        #mediaK.append(soma/j)
+    
+    #variancia B - entre classes
+    sigmaB = np.zeros(shape=(256),dtype=intensidades.dtype)
+    soma = 0
+    maiorV = np.zeros(shape=(256),dtype=int)
+    cont = 0
+    t = 0
+    maior = 0
+   
+    for i in range(0, 256):
+        soma = 0
+       
+       
+        if piK[i] == 0:
+            sigmaB[i] = 0
+            continue
+
+        sigmaB[i]=(pow(((mediaG*piK[i])-mediaK[i]),2)/(piK[i]*(1-piK[i])))
+
+       
+      #  t = i
+
+
+        if i == 0:
+            #maior[i] = sigmaB[i]
+            maior = sigmaB[i]
+            maiorV[cont] = i
+            cont +=1
+            t = i
+        else:
+            if sigmaB[i] > maior:
+                maiorV[cont] = i
+                cont +=1
+                maior = sigmaB[i]
+                t = i
+    
+    med = 0
+    if len(maiorV) > 0:
+        med = maiorV.sum()/len(maiorV)
+        t = med
+    return (t)'''
+    '''             mediaMedico = t   
+    sigmaG = 0
+    for i in range(0,256):
+        sigmaG += (pow((i - mediaG),2)*intensidades[i])
+
+    #éeta
+    eeta = []
+    for i in range(0,256):
+        eeta.append(sigmaB[i] / sigmaG)
+    
+    #valor maximo de eeta
+    maximo = min(eeta)'''
+   
+   # return eeta.index(maximo) #não tá certo :(
+
+    
+
+def histograma():
+
+    plt.style.use('classic')
+    
+    img = cv2.imread('C:/Users/julia/OneDrive/Imagens/10x10.jpg')
+    color = ('b','g','r')
+
+    for i,col in enumerate(color):
+        histr = cv2.calcHist([img],[i],None,[256],[0,256])
+        plt.plot(histr,color=col,lw=2)
+        plt.xlim([0,256])
+    plt.grid()
+    plt.show()
+
 def apply_filter(filter_type):
     if img_cv is None:
         return
     
     match filter_type:
         case 'media3':
-            filtered_img = filtroMedia(3)
-
+            #filtered_img = limiarizacaoGlobal(200)
+            ''' matrizCinza = escalaDeCinza(img_cv)
+            ret,filtered_img = cv2.threshold(matrizCinza,255,255,cv2.THRESH_BINARY)
+            print(ret)'''
+            #histograma()
+            filtered_img = limiarizacaoGlobal(metodoOtsu())
         case 'media5':
-            filtered_img = filtroMedia(5)
+            filtered_img = filtroMedia(200)
 
         case 'media7':
             filtered_img = filtroMedia(7)
