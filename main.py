@@ -390,9 +390,9 @@ def limiarizacaoGlobal(usuarioT, matrizCinza):
     for i in range(0, linhasMatriz):
             for j in range(0, colunasMatriz):
                 if matrizCinza[i][j] > t: 
-                    matrizCinza[i][j] = 255
-                else:
                     matrizCinza[i][j] = 0
+                else:
+                    matrizCinza[i][j] = 255
     
     return matrizCinza
 
@@ -1114,7 +1114,8 @@ def dilatacao(matriz, janela):
 
     linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
     
-    elementoEstruturante = np.full((janela, janela), 0)#e pq meu foreground é preto e background branco
+    
+    elementoEstruturante = np.full((janela, janela), 255)#e pq meu foreground é preto e background branco
    
    
 
@@ -1140,7 +1141,7 @@ def dilatacao(matriz, janela):
                 z = j
                 for r in range(0,elementoEstruturante.shape[0]):
                     if elementoEstruturante[p][r] == matrizBordas[x][z]:#hit
-                        matriz[i][j] = 0
+                        matriz[i][j] = 255
                         sai = 1
                         break
 
@@ -1148,7 +1149,7 @@ def dilatacao(matriz, janela):
               
                 x += 1
             if sai == 0:
-                matriz[i][j] = 255
+                matriz[i][j] = 0
          
     print('aqui é dilatação')
     print(matriz)
@@ -1157,9 +1158,10 @@ def dilatacao(matriz, janela):
 def erosao(matriz, janela):
     #matriz = limiarizacaoAdaptativaSemPadding(img_cv,170)
 
-    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape  
+     
     
-    elementoEstruturante = np.full((janela, janela), 0) #e pq meu foreground é preto e background branco
+    elementoEstruturante = np.full((janela, janela), 255) #e pq meu foreground é preto e background branco
     bordas = elementoEstruturante.shape[0] // 2
     matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
     #kernel = np.ones((5, 5), np.uint8)
@@ -1184,7 +1186,7 @@ def erosao(matriz, janela):
                 z = j
                 for r in range(0,elementoEstruturante.shape[0]):
                     if elementoEstruturante[p][r] != matrizBordas[x][z]:#fit
-                        matriz[i][j] = 255
+                        matriz[i][j] = 0
                         sai = 1
                         break
                     
@@ -1193,7 +1195,7 @@ def erosao(matriz, janela):
               
                 x += 1
             if sai == 0:
-                matriz[i][j] = 0
+                matriz[i][j] = 255
          
     print('aqui é dilatação')
     print(matriz)
@@ -1246,11 +1248,7 @@ def limiarizacaoSemPaddingComMedia(matriz, janela):
             pixelNovo = np.mean(a)
             threshold = pixelNovo - c
             
-           # print(f't {t}')
-           # print()
-            meio = i-bordas // 2
-            print(meio)
-            exit()
+           
             matrizNova[i-bordas:po-bordas, p-bordas:pi-bordas] = limiarizacaoGlobal(threshold,a)
            # b= matrizBordas[i+bordas:bordas+2,j+bordas+2:j+bordas+4]
             #c= matrizBordas[i+bordas:bordas+2, 6:8]
@@ -1359,16 +1357,20 @@ def apply_filter(filter_type):
     
     match filter_type:
         case 'media3':
-            #filtered_img = limiarizacaoGlobal(200)
+            aux = teste(img_cv,5)
+            print('segmentada')
+            print(aux)
+            filtered_img = dilatacao(aux,3)
+           # filtered_img = metodoOtsu(matrizCinza)
             #g = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-            matrizCinza = escalaDeCinza(img_cv)
+            #matrizCinza = escalaDeCinza(img_cv)
             #filtered_img = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,255,10)
             #t,filtered_img=cv2.threshold(g,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
             #histograma()
            # filtered_img = limiarizacaoGlobal(metodoOtsu(img_cv), img_cv)
-            aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,15,8)
-            kernel = np.ones((55,55), np.uint8)
-            filtered_img = cv2.dilate(aux,kernel,iterations=1)
+            #aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,15,8)
+            #kernel = np.ones((55,55), np.uint8)
+            #filtered_img = cv2.dilate(aux,kernel,iterations=1)
             #filtered_img = teste(img_cv,21)
             ''' matrizCinza = escalaDeCinza(img_cv)
             janela=3
@@ -1454,12 +1456,17 @@ def salvarImagem():
 def atualizar_valor(valor, label):
     label.config(text=f'Valor Atual: {valor}')
 
+# Função para atualizar o valor do slider enquanto ele é movido
+def atualizar_valorC(valor, label):
+    label.config(text=f'Valor Atual C: {valor}')
+
 # Função para lidar com o evento de soltura do mouse
 def on_slider_release(slider):
       # Chama a função para calcular a média ou outro cálcul
     print(f'estou aqui com o valor {slider}')
+    A = limiarizacaoAdaptativaMedia(img_cv, slider)
     
-    display_image(limiarizacaoAdaptativa(img_cv, 209), original=False)  # Exibe a imagem editada
+    display_image(erosao(A,9), original=False)  # Exibe a imagem editada
 
 # Função para criar o slider e os labels dentro de um popup
 # Função para aumentar o valor do slider ao pressionar a seta para a direita
@@ -1484,10 +1491,19 @@ def criar_popup():
      # Criando o slider
     slider = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: [atualizar_valor(val, label), on_slider_release(int(val))], length=400)
     slider.pack(pady=20)
-    
+
     # Criando o label para mostrar o valor atual
     label = tk.Label(popup, text="Valor Atual: 0")
     label.pack()
+
+     # Criando o slider
+    slider2 = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: [atualizar_valorC(val, label2), on_slider_release(int(val))], length=400)
+    slider2.pack(pady=20)
+    
+    
+    # Criando o label para mostrar o valor atual
+    label2 = tk.Label(popup, text="Valor Atual C: 0")
+    label2.pack()
 
     # Bind das teclas de seta para aumentar ou diminuir o valor do slider
     popup.bind("<Right>", lambda event: aumentar_slider(event, slider, label))  # seta para a direita
