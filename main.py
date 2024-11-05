@@ -763,7 +763,7 @@ def metodoOtsu(matrizCinza):
    # return eeta.index(maximo) #não tá certo :(
 
 #limiarização adaptativa com uso de paddings
-def limiarizacaoAdaptativa(matriz,janela):
+def limiarizacaoAdaptativa(matriz,janela):#esse daqui não dá muito, muito lento
 
     matriz = escalaDeCinza(matriz)
     linhasMatrizImagem, colunasMatrizImagem = matriz.shape
@@ -772,6 +772,8 @@ def limiarizacaoAdaptativa(matriz,janela):
 
     bordas = janela // 2
     matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+    print(matrizBordas)
+    print('############################################')
    # matrizBordas = matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
     lb,cb = matrizBordas.shape
     matrizNova = np.zeros(shape=(lb,cb),dtype=matrizBordas.dtype)
@@ -799,6 +801,7 @@ def limiarizacaoAdaptativa(matriz,janela):
                 for r in range(0,janela):
                     #soma += (kernel[p][r] * matrizImagemParaFiltro[x][z])
                     matrizSegmentacao[p][r] = matrizBordas[x][z]
+                    #print(matrizSegmentacao[p][r], end=' ')
                     '''if (x < bordas or x >= (lb-bordas) ) or (z < bordas or z >= (cb-bordas)):
                         z += 1
                         print(f'{x}-{z}', end=' ')
@@ -814,8 +817,7 @@ def limiarizacaoAdaptativa(matriz,janela):
                     #print(matrizSegmentacao[p][r], end=' ')
                    # print(matrizBordas[x][z])
                     z += 1
-                #print()
-               
+               # print()
                 x += 1
             #print(f'qtl={qtL}--qtc{qtC}')
             
@@ -824,7 +826,12 @@ def limiarizacaoAdaptativa(matriz,janela):
                 for sa in range(0,len(qtC)):
                     ml2[na][sa] = ml.pop(0)'''
            
-
+            #print()
+            #t,l = cv2.threshold(matrizSegmentacao,0,255,cv2.THRESH_BINARY_INV)
+            #matrizSegmentacao = matrizSegmentacao.astype(np.uint8)
+            
+            #t,filtered_img=cv2.threshold(matrizSegmentacao,46,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
+            
             t = metodoOtsu(matrizSegmentacao)
             matrizSegmentacao2 = limiarizacaoGlobal(t,matrizSegmentacao)
             #print(matrizSegmentacao2)
@@ -846,7 +853,7 @@ def limiarizacaoAdaptativa(matriz,janela):
             
             #print('-------------------------------------------')
            
-    print(matrizNova)
+   # print(matrizNova)
     matriz2 = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)
 
     contL = 0
@@ -861,14 +868,14 @@ def limiarizacaoAdaptativa(matriz,janela):
             #print(contC)
         #print()
         contL += 1
-    print(matriz2)
+    #print(matriz2)
     #print(f'{matrizBordas}')
-    print('##########################################')    
+   # print('##########################################')    
         
     return matriz2
 
 #sem padding quando envia pro otsu e limiarização global
-def limiarizacaoAdaptativaSemPadding(matriz,janela):
+def limiarizacaoAdaptativaSemPadding(matriz, janela):
 
 
     matriz = escalaDeCinza(matriz)
@@ -877,8 +884,9 @@ def limiarizacaoAdaptativaSemPadding(matriz,janela):
     bordas = janela // 2
     matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
     print(matrizBordas)
-    lb,cb=matrizBordas.shape
-    print(f'cbb {cb}')
+    #print('###################################################')
+    lb,cb = matrizBordas.shape
+    
     #a =matrizBordas[:2,2:4]
     #b=matrizBordas[:2,:2]
     #c=matrizBordas[:2,4:6]
@@ -887,146 +895,462 @@ def limiarizacaoAdaptativaSemPadding(matriz,janela):
     j = 0
     cc = 0
     cc2 = 0
-    pi=janela
-    po=bordas+abs(bordas-janela)
+    pi = janela
+    po = bordas + abs(bordas - janela)
     t = 0
     matrizNova = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)#acho que essa foi pra sem bordas
 
-    while cc2 < lb-bordas:
+    while cc2 < lb - bordas:
        # print(f'j{j}')
-        p=j+bordas
+        p = j + bordas
         
-        while cc < cb-bordas:
-            a = matrizBordas[i:po,p:pi]
+        while cc < cb - bordas:
+            a = matrizBordas[i:po, p:pi]
             #print(f'[{i}:{po},{p}:{pi}]')
             #print(f'[{i-bordas}:{po-bordas},{p-bordas}:{pi-bordas}]')
-            #print(a)
-           
+            print(a)
+            
             
             t = metodoOtsu(a)
            # print(f't {t}')
            # print()
-            matrizNova[i-bordas:po-bordas,p-bordas:pi-bordas] = limiarizacaoGlobal(t,a)
+            matrizNova[i-bordas:po-bordas, p-bordas:pi-bordas] = limiarizacaoGlobal(t,a)
            # b= matrizBordas[i+bordas:bordas+2,j+bordas+2:j+bordas+4]
             #c= matrizBordas[i+bordas:bordas+2, 6:8]
             
-            p= pi
-            cc=p
+            p = pi
+            cc = p
             j += bordas
-            pi+=janela
+            pi += janela
             
-            if pi > cb-bordas:
-                pi = cb-bordas
+            if pi > cb - bordas:
+                pi = cb - bordas
         #print()
         i = po
-        po = i+janela
-        if po > lb-bordas:
-                po = lb-bordas
+        po = i + janela
+        if po > lb - bordas:
+                po = lb - bordas
         j = 0
         cc = 0
         cc2 = i
-        pi=janela
+        pi = janela
     ''' print(matrizBordas)
     print(a)
     print(b)
     print(c)'''
     return matrizNova
-    exit()
-   # matrizBordas = matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
-    lb,cb = matrizBordas.shape
-   # matrizNova = np.zeros(shape=(lb,cb),dtype=matrizBordas.dtype)
-    matrizNova = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)#acho que essa foi pra sem bordas
 
+
+
+
+def maior_divisor_comum(a, b):
+    divisor = np.gcd(a, b)
+    # Verifica se o divisor é igual a um dos números e busca o próximo menor divisor
+    if divisor == a or divisor == b:
+        # Busca o maior divisor menor que 'divisor'
+        for i in range(divisor - 1, 0, -1):
+            if a % i == 0 and b % i == 0:
+                return i
+    return divisor
+
+def limiarizacaoAdaptativaMedia(matriz, janela):
+    matriz = escalaDeCinza(matriz)
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    #janela = 13
+    bordas = janela // 2
+    matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
     #print(matrizBordas)
-    ml = []
-    #bordas = janela // 2
-    #matrizBordas = matrizComBordasGemeas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+    #print('###################################################')
+    lb,cb = matrizBordas.shape
+    
+    c = 5
 
-    for i in range(0, linhasMatrizImagem+1,janela):
+    for j in range(0, linhasMatrizImagem,janela):
+        for k in range(0, colunasMatrizImagem,janela):
+           # print(f'{j} {k}')
+           
+
+            if matriz[j:j+janela,k:k+janela].shape[0] != janela or matriz[j:j+janela,k:k+janela].shape[1] != janela:
+                mdc = maior_divisor_comum(matriz[j:j+janela,k:k+janela].shape[0],matriz[j:j+janela,k:k+janela].shape[1])
+                if mdc != 1:
+                    for l in range(0, matriz[j:j+janela,k:k+janela].shape[0],mdc):
+                        for m in range(0, matriz[j:j+janela,k:k+janela].shape[1],mdc):
+                            #print(mdc)
+                            #print(matriz[l:l+mdc,m:m+mdc])
+                            pixelNovo = np.mean(matriz[l:l+mdc,m:m+mdc])
+                            threshold = pixelNovo - c
+                            matriz[l:l+mdc,m:m+mdc] = limiarizacaoGlobal(threshold,matriz[l:l+mdc,m:m+mdc])
+                            # for r in range(0, matriz[l:l+mdc,m:m+mdc].shape[0]):
+                             #   for k in range(0, matriz[l:l+mdc,m:m+mdc].shape[1]):
+                                #    if  matriz[r][k] > threshold:
+                                 #       matriz[r][k] = 255
+                                  #  else:
+                                     #   matriz[r][k] = 0
+                else:
+                    media = np.mean(matriz[j:j+janela,k:k+janela])
+                   # print(media)
+                    pixelNovo = np.mean(matriz[j:j+janela,k:k+janela])
+                    threshold = pixelNovo - c
+                    matriz[j:j+janela,k:k+janela] = limiarizacaoGlobal(threshold,matriz[j:j+janela,k:k+janela])
+            else:
+                pixelNovo = np.mean(matriz[j:j+janela,k:k+janela])
+                threshold = pixelNovo - c
+                matriz[j:j+janela,k:k+janela] = limiarizacaoGlobal(threshold,matriz[j:j+janela,k:k+janela])
+                #print(matriz[j:j+janela,k:k+janela])
+        #print()
+
+    print('aqui é threshold')
+    print(matriz)
+    return matriz
+    
+    '''
+    #a =matrizBordas[:2,2:4]
+    #b=matrizBordas[:2,:2]
+    #c=matrizBordas[:2,4:6]
+    #c=matriz[2:4,4:6]
+    i = bordas
+    j = 0
+    cc = 0
+    cc2 = 0
+    
+    pi = janela
+    po = bordas + abs(bordas - janela)
+    t = 0
+    matrizNova = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)#acho que essa foi pra sem bordas
+    #c = 6
+    
+    while cc2 < lb - bordas:
+       # print(f'j{j}')
+        p = j + bordas
+        
+        while cc < cb - bordas:
+            a = matrizBordas[i:po, p:pi]
+            #print(f'[{i}:{po},{p}:{pi}]')
+            #print(f'[{i-bordas}:{po-bordas},{p-bordas}:{pi-bordas}]')
+            #print(a)
+            l1,c1 = a.shape
+            pixelNovo = np.mean(a)
+            threshold = pixelNovo - c
+            for r in range(0, l1):
+                for k in range(0, c1):
+                    if  a[r][k] > threshold:
+                        a[r][k] = 255
+                    else:
+                        a[r][k] = 0
+          
+            #t = metodoOtsu(a)
+           # print(f't {t}')
+           # print()
+            matrizNova[i-bordas:po-bordas, p-bordas:pi-bordas] = a
+           # b= matrizBordas[i+bordas:bordas+2,j+bordas+2:j+bordas+4]
+            #c= matrizBordas[i+bordas:bordas+2, 6:8]
+            
+            p = pi
+            cc = p
+            j += bordas
+            pi += janela
+            
+            if pi > cb - bordas:
+                pi = cb - bordas
+        #print()
+        i = po
+        po = i + janela
+        if po > lb - bordas:
+                po = lb - bordas
+        j = 0
+        cc = 0
+        cc2 = i
+        pi = janela
+    
+    return matrizNova
+    '''
+    '''
+
+    matriz = escalaDeCinza(matriz)
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    bordas = janela // 2
+    matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+    lb, cb = matrizBordas.shape
+    conT = 0
+    c = 0
+    print(matriz)
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            soma = 0
+            conT = 0
+            print(f'esse é para {i} {j}')
+            for p in range(0,5):
+                z = j
+                for r in range(0,5):
+                    
+                    if (x < bordas or x >= (lb-bordas) ) or (z < bordas or z >= (cb-bordas)):
+                        z += 1
+                        continue
+                    soma += (matrizBordas[x][z])
+                    print(f'{matrizBordas[x][z]}',end=' ')
+                    conT += 1
+                    
+                    z += 1
+                print()
+                x += 1
+            
+            pixelNovo = soma / conT
+            threshold = pixelNovo - c
+           
+            if matriz[i][j] > threshold: #normalização, pixels variam de 0-255
+                matriz[i][j] = 255
+            else:
+                matriz[i][j] = pixelNovo
+    return matriz
+    '''
+
+def dilatacao(matriz, janela):
+    #matriz = limiarizacaoAdaptativaSemPadding(img_cv,170)
+
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    
+    elementoEstruturante = np.full((janela, janela), 0)#e pq meu foreground é preto e background branco
+   
+   
+
+    bordas = elementoEstruturante.shape[0] // 2
+    matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+    #kernel = np.ones((3, 3), np.uint8)
+
+    # Aplicar dilatação
+   # imagem_dilatada = cv2.dilate(matriz, kernel, iterations=1)
+    #print(imagem_dilatada)
+    #return imagem_dilatada
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            sai = 0
+            for p in range(0,elementoEstruturante.shape[0]):
+                if sai == 1:
+                    break
+                z = j
+                for r in range(0,elementoEstruturante.shape[0]):
+                    if elementoEstruturante[p][r] == matrizBordas[x][z]:#hit
+                        matriz[i][j] = 0
+                        sai = 1
+                        break
+
+                    z += 1
+              
+                x += 1
+            if sai == 0:
+                matriz[i][j] = 255
+         
+    print('aqui é dilatação')
+    print(matriz)
+    return matriz
+
+def erosao(matriz, janela):
+    #matriz = limiarizacaoAdaptativaSemPadding(img_cv,170)
+
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    
+    elementoEstruturante = np.full((janela, janela), 0) #e pq meu foreground é preto e background branco
+    bordas = elementoEstruturante.shape[0] // 2
+    matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+    #kernel = np.ones((5, 5), np.uint8)
+
+    # Aplicar erosão
+    ''' im = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+    im = cv2.adaptiveThreshold(im,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,15,0)
+    imagem_erosionada = cv2.erode(im, kernel, iterations=1)
+    print(imagem_erosionada)
+    return imagem_erosionada'''
+    for i in range(0, linhasMatrizImagem):
+        z = 0
+
+        for j in range(0, colunasMatrizImagem):
+            x = i
+            z = j
+            
+            sai = 0
+            for p in range(0,elementoEstruturante.shape[0]):
+                if sai == 1:
+                    break
+                z = j
+                for r in range(0,elementoEstruturante.shape[0]):
+                    if elementoEstruturante[p][r] != matrizBordas[x][z]:#fit
+                        matriz[i][j] = 255
+                        sai = 1
+                        break
+                    
+
+                    z += 1
+              
+                x += 1
+            if sai == 0:
+                matriz[i][j] = 0
+         
+    print('aqui é dilatação')
+    print(matriz)
+    return matriz
+
+def abertura(matriz, janela):
+    imgErosao = erosao(matriz, janela)
+    imgDilatacao = dilatacao(imgErosao, janela)
+    return imgDilatacao
+
+def fechamento(matriz, janela):
+    imgDilatacao = dilatacao(matriz, janela)
+    imgErosao = erosao(imgDilatacao, janela)
+    return imgErosao
+
+def limiarizacaoSemPaddingComMedia(matriz, janela):
+    
+    matriz = escalaDeCinza(matriz)
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
+    
+    bordas = janela // 2
+    matrizBordas = matrizComBordasZeradas(matriz, bordas, linhasMatrizImagem, colunasMatrizImagem)
+ 
+    #print('###################################################')
+    lb,cb = matrizBordas.shape
+    
+    #a =matrizBordas[:2,2:4]
+    #b=matrizBordas[:2,:2]
+    #c=matrizBordas[:2,4:6]
+    #c=matriz[2:4,4:6]
+    i = bordas
+    j = 0
+    cc = 0
+    cc2 = 0
+    pi = janela
+    po = bordas + abs(bordas - janela)
+    t = 0
+    matrizNova = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)#acho que essa foi pra sem bordas
+    c = 6
+    while cc2 < lb - bordas:
+       # print(f'j{j}')
+        p = j + bordas
+        
+        while cc < cb - bordas:
+            a = matrizBordas[i:po, p:pi]
+            #print(f'[{i}:{po},{p}:{pi}]')
+            #print(f'[{i-bordas}:{po-bordas},{p-bordas}:{pi-bordas}]')
+            
+            
+            pixelNovo = np.mean(a)
+            threshold = pixelNovo - c
+            
+           # print(f't {t}')
+           # print()
+            meio = i-bordas // 2
+            print(meio)
+            exit()
+            matrizNova[i-bordas:po-bordas, p-bordas:pi-bordas] = limiarizacaoGlobal(threshold,a)
+           # b= matrizBordas[i+bordas:bordas+2,j+bordas+2:j+bordas+4]
+            #c= matrizBordas[i+bordas:bordas+2, 6:8]
+            
+            p = pi
+            cc = p
+            j += bordas
+            pi += janela
+            
+            if pi > cb - bordas:
+                pi = cb - bordas
+        #print()
+        i = po
+        po = i + janela
+        if po > lb - bordas:
+                po = lb - bordas
+        j = 0
+        cc = 0
+        cc2 = i
+        pi = janela
+    
+    return matrizNova
+
+def teste(matriz, janela):
+    index = 0
+    matriz = escalaDeCinza(matriz)
+    bordas = janela // 2
+
+    linhasMatrizZero = matriz.shape[0] + bordas*2
+    colunasMatrizZero = matriz.shape[1] + bordas*2
+    
+    matrizBordas = np.zeros(shape = (linhasMatrizZero,colunasMatrizZero)).astype(int)
+   
+    for i in range(0, linhasMatrizZero - bordas*2):
+        index = 0
+        for j in range(0,colunasMatrizZero - bordas*2):
+            matrizBordas[i][j] = matriz[i][j]
+            index += 1
+
+    linhasMatrizImagem, colunasMatrizImagem = matriz.shape
+
+    print(matrizBordas)
+  
+    lb,cb = matrizBordas.shape
+    matrizNova = np.zeros(shape=(lb,cb),dtype=matrizBordas.dtype)
+  
+    for i in range(0, linhasMatrizImagem):
         z = 0
         pera = 0
-        for j in range(0, colunasMatrizImagem+1,janela):
+        for j in range(0, colunasMatrizImagem):
             x = i
             z = j
             maca = i
             pera = j
             matrizSegmentacao = np.zeros(shape=(janela,janela),dtype=matrizBordas.dtype)
             
-            qtL = []
-            qtC = []
+          
             for p in range(0,janela):
                 z = j                
                 for r in range(0,janela):
-                    if (x < bordas or x >= (lb-bordas) ) or (z < bordas or z >= (cb-bordas)):
-                        z += 1
-                        #print(f'{x}-{z}', end=' ')
-                        continue
-                    
-
-                    
-                    ml.append(matrizBordas[x][z])
-                    if x not in qtL:
-                        qtL.append(x)
-                    if z not in qtC:
-                        qtC.append(z)
-                    #print(matrizSegmentacao[p][r], end=' ')
-                   # print(matrizBordas[x][z])
+                    matrizSegmentacao[p][r] = matrizBordas[x][z]
+                   
                     z += 1
-                #print()
                
                 x += 1
-            #print(f'qtl={qtL}--qtc{qtC}')
             
-            ml2 = np.zeros(shape=(len(qtL),len(qtC)),dtype=matrizBordas.dtype)
-            print()
-            print(ml)
-            for na in range(0,len(qtL)):
-                for sa in range(0,len(qtC)):
-                    ml2[na][sa] = ml.pop(0)
-           
 
-            t = metodoOtsu(ml2)
-            matrizSegmentacao2 = limiarizacaoGlobal(t,ml2)
-            #print(matrizSegmentacao2)
+            c = 6
+            pixelNovo = np.mean(matrizSegmentacao)
+            threshold = pixelNovo - c
             
+            
+            matrizSegmentacao2 = limiarizacaoGlobal(threshold,matrizSegmentacao)
+
+            #t = metodoOtsu(matrizSegmentacao)
+            #matrizSegmentacao2 = limiarizacaoGlobal(t,matrizSegmentacao)
+          
             maca = i
             pera = j
-            for uva in range(0,len(qtL)):
+            for uva in range(0,janela):
                 pera = j
-                for manga in range(0,len(qtC)):
-                    #soma += (kernel[p][r] * matrizImagemParaFiltro[x][z])
-                    #matrizNova[maca][pera] = matrizSegmentacao2[uva][manga]
-                    print(matrizSegmentacao2[uva][manga], end=' ')
+                for manga in range(0,janela):
+                    matrizNova[maca][pera] = matrizSegmentacao2[uva][manga]
 
                     pera += 1
-                print()
                 maca += 1
-            print()
-           # print(f'T={t}')
-            #
-            
-            #print('-------------------------------------------')
-           
-    #print(matrizNova)
-    exit()
+
     matriz2 = np.zeros(shape=(linhasMatrizImagem,colunasMatrizImagem),dtype=matriz.dtype)
 
     contL = 0
     contC = 0
     for i in range(bordas, lb-bordas):
         contC = 0
-       # print(i)
+       
         for j in range(bordas, cb-bordas):
             matriz2[contL][contC] = matrizNova[i][j]
-            #print(matrizNova[i][j],end=' ')
             contC += 1
-            #print(contC)
-        #print()
+           
         contL += 1
-    print(matriz2)
-    #print(f'{matrizBordas}')
-    print('##########################################')    
-        
+  
     return matriz2
 
 def apply_filter(filter_type):
@@ -1036,12 +1360,41 @@ def apply_filter(filter_type):
     match filter_type:
         case 'media3':
             #filtered_img = limiarizacaoGlobal(200)
-            ''' matrizCinza = escalaDeCinza(img_cv)
-            ret,filtered_img = cv2.threshold(matrizCinza,255,255,cv2.THRESH_BINARY)
-            print(ret)'''
+            #g = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+            matrizCinza = escalaDeCinza(img_cv)
+            #filtered_img = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,255,10)
+            #t,filtered_img=cv2.threshold(g,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
             #histograma()
            # filtered_img = limiarizacaoGlobal(metodoOtsu(img_cv), img_cv)
-            filtered_img = limiarizacaoAdaptativaSemPadding(img_cv,205)
+            aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,15,8)
+            kernel = np.ones((55,55), np.uint8)
+            filtered_img = cv2.dilate(aux,kernel,iterations=1)
+            #filtered_img = teste(img_cv,21)
+            ''' matrizCinza = escalaDeCinza(img_cv)
+            janela=3
+            ppp = np.full((janela,janela),0,np.uint8)
+              #for i in range (0,janela):
+                #for j in range(floor(janela/2),janela-1):
+                  #  ppp[i][j] = 255
+            for i in range (floor(janela/2),janela-1):
+                for j in range(0,janela):
+                    ppp[i][j] = 255
+            kernel = np.ones((3,3), np.uint8)
+            aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,255,10)
+            print(aux)
+            #di = cv2.dilate(aux,ppp,iterations=1)
+            filtered_img = cv2.erode(aux,ppp,iterations=1)'''
+            '''
+            1)convoluir a imagem com kernel media
+            2)convoluida - original
+            3)faz limiarização com o valor de c. c é o threshold
+            4)inverte, o que for 1 vira 0, o que for 0 vira 1
+            '''
+            ''' 
+             a = a.astype(np.uint8)
+            
+            t,filtered_img=cv2.threshold(a,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
+            '''
         case 'media5':
             filtered_img = filtroMedia(5)
 
@@ -1097,6 +1450,69 @@ def salvarImagem():
         img_pil.save(nomeArquivo)
 
 
+# Função para atualizar o valor do slider enquanto ele é movido
+def atualizar_valor(valor, label):
+    label.config(text=f'Valor Atual: {valor}')
+
+# Função para lidar com o evento de soltura do mouse
+def on_slider_release(slider):
+      # Chama a função para calcular a média ou outro cálcul
+    print(f'estou aqui com o valor {slider}')
+    
+    display_image(limiarizacaoAdaptativa(img_cv, 209), original=False)  # Exibe a imagem editada
+
+# Função para criar o slider e os labels dentro de um popup
+# Função para aumentar o valor do slider ao pressionar a seta para a direita
+def aumentar_slider(event, slider, label):
+    novo_valor = slider.get() + 1
+    if novo_valor <= slider.cget("to"):  # Limita o valor máximo
+        slider.set(novo_valor)
+        atualizar_valor(novo_valor, label)
+
+# Função para diminuir o valor do slider ao pressionar a seta para a esquerda
+def diminuir_slider(event, slider, label):
+    novo_valor = slider.get() - 1
+    if novo_valor >= slider.cget("from"):  # Limita o valor mínimo
+        slider.set(novo_valor)
+        atualizar_valor(novo_valor, label)
+def criar_popup():
+    # Criando a janela popup (Toplevel)
+    popup = tk.Toplevel()
+    popup.title("Slider em Popup")
+    popup.geometry("500x500")
+
+     # Criando o slider
+    slider = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: [atualizar_valor(val, label), on_slider_release(int(val))], length=400)
+    slider.pack(pady=20)
+    
+    # Criando o label para mostrar o valor atual
+    label = tk.Label(popup, text="Valor Atual: 0")
+    label.pack()
+
+    # Bind das teclas de seta para aumentar ou diminuir o valor do slider
+    popup.bind("<Right>", lambda event: aumentar_slider(event, slider, label))  # seta para a direita
+    popup.bind("<Left>", lambda event: diminuir_slider(event, slider, label))   # seta para a esquerda
+
+    # Usando o comando para atualizar o valor enquanto o slider é movido
+  #  slider.config(command=lambda val: on_slider_release(int(val)) )
+'''
+    # Criando o slider
+    slider = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: atualizar_valor(val, label))
+    slider.pack()
+    
+    # Criando o label para mostrar o valor atual
+    label = tk.Label(popup, text="Valor Atual: 0")
+    label.pack()
+
+    # Criando o label para mostrar o resultado do cálculo (exemplo: média)
+    label_resultado = tk.Label(popup, text="Média Calculada: 0")
+    label_resultado.pack()
+
+    # Bind do evento ButtonRelease-1 ao slider (quando o mouse é solto)
+    slider.bind("<ButtonRelease-1>", lambda event: on_slider_release(slider.get()))
+'''
+    
+
 # Definindo a GUI
 root = tk.Tk()
 root.title("Photoshop da Julia")
@@ -1118,6 +1534,7 @@ file_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Arquivo", menu=file_menu)
 file_menu.add_command(label="Carregar Imagem", command=load_image)
 file_menu.add_command(label="Salvar Imagem", command=salvarImagem)
+file_menu.add_command(label="Criar Valoresm", command=criar_popup)
 
 #file_menu.add_separator()
 #file_menu.add_command(label="Exit", command=root.quit)
