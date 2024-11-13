@@ -84,12 +84,12 @@ def convolucao(filtered_img, matrizImagemParaFiltro, kernel, ordemKernel,linhasM
                 z = j
                 for r in range(0,ordemKernel):
                     soma += (kernel[p][r] * matrizImagemParaFiltro[x][z])
-                    print(matrizImagemParaFiltro[p][r], end=' ')
+                    #print(matrizImagemParaFiltro[p][r], end=' ')
 
                     z += 1
-                print()
+                #print()
                 x += 1
-            print('-------------------------------------------')
+            #print('-------------------------------------------')
             pixelNovo = abs(floor(soma / divisor)) 
            
             if pixelNovo > 255: #normalização, pixels variam de 0-255
@@ -571,11 +571,12 @@ def maiorDivisorComum(a, b):
                 return i
     return divisor
 
-def limiarizacaoAdaptativaMedia(matriz, janela):
+def limiarizacaoAdaptativaMedia(matriz, janela, c):
     
     linhasMatrizImagem, colunasMatrizImagem = matriz.shape   
-    
-    c = 6
+    #print(f'window {janela}')
+    #print(f'c {c}')
+    c = c
     
     for j in range(0, linhasMatrizImagem,janela):
         for k in range(0, colunasMatrizImagem,janela):
@@ -669,6 +670,8 @@ def dilatacao(matriz, janela):
 
 def erosao(matriz, janela):
 
+    #print(matriz)
+
     linhasMatrizImagem, colunasMatrizImagem = matriz.shape  
      
     
@@ -721,50 +724,7 @@ def apply_filter(filter_type):
     
     match filter_type:
         case 'media3':
-            matrizCinza = escalaDeCinza(img_cv)
-            #t = limiarizacaoGlobal(37,matrizCinza,matrizCinza.shape[0],matrizCinza.shape[1])
-            A = limiarizacaoAdaptativaMBernsen(matrizCinza,71)
-            filtered_img = erosao(matrizCinza,3)
-            #aux = teste(img_cv,5)
-            #print('segmentada')
-            #print(aux)
-            #filtered_img = dilatacao(aux,3)
-           # filtered_img = metodoOtsu(matrizCinza)
-            #g = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-            #matrizCinza = escalaDeCinza(img_cv)
-            #filtered_img = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,255,10)
-            #t,filtered_img=cv2.threshold(g,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
-            #histograma()
-           # filtered_img = binarizacao(metodoOtsu(img_cv), img_cv)
-            #aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,15,8)
-            #kernel = np.ones((55,55), np.uint8)
-            #filtered_img = cv2.dilate(aux,kernel,iterations=1)
-            #filtered_img = teste(img_cv,21)
-            ''' matrizCinza = escalaDeCinza(img_cv)
-            janela=3
-            ppp = np.full((janela,janela),0,np.uint8)
-              #for i in range (0,janela):
-                #for j in range(floor(janela/2),janela-1):
-                  #  ppp[i][j] = 255
-            for i in range (floor(janela/2),janela-1):
-                for j in range(0,janela):
-                    ppp[i][j] = 255
-            kernel = np.ones((3,3), np.uint8)
-            aux = cv2.adaptiveThreshold(matrizCinza,255,cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY,255,10)
-            print(aux)
-            #di = cv2.dilate(aux,ppp,iterations=1)
-            filtered_img = cv2.erode(aux,ppp,iterations=1)'''
-            '''
-            1)convoluir a imagem com kernel media
-            2)convoluida - original
-            3)faz limiarização com o valor de c. c é o threshold
-            4)inverte, o que for 1 vira 0, o que for 0 vira 1
-            '''
-            ''' 
-             a = a.astype(np.uint8)
-            
-            t,filtered_img=cv2.threshold(a,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
-            '''
+             filtered_img = filtroMedia(3)
         case 'media5':
             filtered_img = filtroMedia(5)
 
@@ -821,88 +781,184 @@ def salvarImagem():
 
 
 # Função para atualizar o valor do slider enquanto ele é movido
-def atualizar_valor(valor, label):
+def atualizarValor(valor, label):
     label.config(text=f'Valor Atual: {valor}')
 
 # Função para atualizar o valor do slider enquanto ele é movido
-def atualizar_valorC(valor, label):
+def atualizarValorC(valor, label):
     label.config(text=f'Valor Atual C: {valor}')
 
 # Função para lidar com o evento de soltura do mouse
-def on_slider_release(slider):
-      # Chama a função para calcular a média ou outro cálcul
+def aplicarOperacoes(janela,c,tipo,vMorfo=0):
+   # print(tipo)
     mc = escalaDeCinza(img_cv)
-    t,filtered_img = cv2.threshold(mc,255,255,cv2.THRESH_BINARY_INV|cv2.THRESH_OTSU)
-    kernel = np.ones((30,30), np.uint8)
-    A = cv2.dilate(filtered_img,kernel,iterations=1)
-    A = cv2.erode(A,kernel,iterations=1)
-    #A = limiarizacaoAdaptativaMBernsen(mc,71)
-    #B = binarizacao(A,mc)
-    #C = fechamento(A,slider)
-    #A = binarizacao(t,mc)
+    janela = int(janela)
+    c = int(c)
+    vMorfo = int(vMorfo)
+    A = 0
+    match tipo:
+        case 'binarizacao':
+            A = binarizacao(c,mc)
+        case 'globalS':
+            A = limiarizacaoGlobal(c,mc,mc.shape[0],mc.shape[1])
+        case 'media':
+            A = limiarizacaoAdaptativaMedia(mc, janela, c)
+        case 'otsuG':
+            A = metodoOtsu(mc)
+        case 'otsuL':
+            A = limiarizacaoAdaptativaSemPaddingOtsu(mc, janela)
+        case 'bernsen':
+            A = limiarizacaoAdaptativaMBernsen(mc,janela)
+        case 'erosao':
+            B = limiarizacaoAdaptativaSemPaddingOtsu(mc, janela)
+            A = erosao(B, vMorfo)
+        case 'dilatacao':
+            B = limiarizacaoAdaptativaSemPaddingOtsu(mc, janela) 
+            A = dilatacao(B, vMorfo)
+        case 'abertura':
+            B = limiarizacaoAdaptativaSemPaddingOtsu(mc, janela) 
+            A = abertura(B, vMorfo)
+        case 'fechamento':
+            B = limiarizacaoAdaptativaSemPaddingOtsu(mc, janela)
+            A = fechamento(B, vMorfo)
+    #A = limiarizacaoAdaptativaMedia(mc, janela,c)
     display_image(A, original=False) 
    # display_image(erosao(A,9), original=False)  # Exibe a imagem editada
 
 # Função para criar o slider e os labels dentro de um popup
 # Função para aumentar o valor do slider ao pressionar a seta para a direita
-def aumentar_slider(event, slider, label):
+def aumentarSlider(slider, label):
     novo_valor = slider.get() + 1
     if novo_valor <= slider.cget("to"):  # Limita o valor máximo
         slider.set(novo_valor)
-        atualizar_valor(novo_valor, label)
+        atualizarValor(novo_valor, label)
 
 # Função para diminuir o valor do slider ao pressionar a seta para a esquerda
-def diminuir_slider(event, slider, label):
+def diminuirSlider(slider, label):
     novo_valor = slider.get() - 1
     if novo_valor >= slider.cget("from"):  # Limita o valor mínimo
         slider.set(novo_valor)
-        atualizar_valor(novo_valor, label)
-def criar_popup():
+        atualizarValor(novo_valor, label)
+
+def criarPopup(tipo):
+   
+    popup = tk.Toplevel()
+    #popup.title("Slider em Popup")
+    popup.geometry("500x500")
+
+    labelJanela = tk.Label(popup, text="Tamanho da Janela")
+    labelJanela.grid(row=1, column=0)
+    v = tk.StringVar(popup, value='3')
+    jan = tk.Entry(popup, width=20,textvariable=v)
+    jan.grid(row=1, column=1)
+
+    labelC = tk.Label(popup, text="valor da constante C")
+    labelC.grid(row=3, column=0)
+    v = tk.StringVar(popup, value='3')
+    janC = tk.Entry(popup, width=20,textvariable=v)
+    janC.grid(row=3, column=1)
+
+    b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),janC.get(),tipo))
+    b.grid(row=5,column=2)
+
+def criarPopup2(tipo):
+    # Criando a janela popup (Toplevel)
+    popup = tk.Toplevel()
+    #popup.title("Slider em Popup")
+    popup.geometry("500x500")
+
+    labelJanela = tk.Label(popup, text="Tamanho da Janela")
+    labelJanela.grid(row=1, column=0)
+    v = tk.StringVar(popup, value='3')
+    jan = tk.Entry(popup, width=20,textvariable=v)
+    jan.grid(row=1, column=1)
+
+    
+    labelC = tk.Label(popup, text="valor do Limiar")
+    labelC.grid(row=3, column=0)
+    v = tk.StringVar(popup, value='3')
+    janC = tk.Entry(popup, width=20,textvariable=v)
+    janC.grid(row=3, column=1)
+
+    b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),janC.get(),tipo))
+    b.grid(row=6,column=1)
+
+    labelT = tk.Label(popup, text="Para o método de binarização a janela não é considerada")
+    labelT.grid(row=8,column=1)
+
+def criarPopup3(tipo):
+    # Criando a janela popup (Toplevel)
+    popup = tk.Toplevel()
+    #popup.title("Slider em Popup")
+    popup.geometry("500x500")
+
+    labelJanela = tk.Label(popup, text="Tamanho da Janela")
+    labelJanela.grid(row=1, column=0)
+    v = tk.StringVar(popup, value='3')
+    jan = tk.Entry(popup, width=20,textvariable=v)
+    jan.grid(row=1, column=1)
+
+  
+    b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),0,tipo))
+    b.grid(row=6,column=2)
+
+
+'''
+def t(tipo,janelaE, janela=0,limiar=0,c=0):
+    print(tipo)
+    img_cv = getValueRadio(tipo, janela, limiar, c)
+    
+    A = erosao(img_cv,janelaE)
+    display_image(A, original=False) 
+   # print(img_cv)
+
+def getValueRadio(tipo,janela=0,limiar=0,c=0):
+    mc = escalaDeCinza(img_cv)
+    if tipo == 'otsu':
+        return metodoOtsu(mc)
+    elif tipo == 'binarizacao':
+        return binarizacao(limiar,mc)
+
+def criarPopup4(tipo):
     # Criando a janela popup (Toplevel)
     popup = tk.Toplevel()
     popup.title("Slider em Popup")
     popup.geometry("500x500")
 
-     # Criando o slider
-    slider = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: [atualizar_valor(val, label), on_slider_release(int(val))], length=400)
-    slider.pack(pady=20)
+    labelJanela = tk.Label(popup, text="Tamanho da Janela Segmentação")
+    labelJanela.grid(row=1, column=0)
+    v = tk.StringVar(popup, value='3')
+    jan = tk.Entry(popup, width=20,textvariable=v)
+    jan.grid(row=1, column=1)
 
-    # Criando o label para mostrar o valor atual
-    label = tk.Label(popup, text="Valor Atual: 0")
-    label.pack()
+    labelC3 = tk.Label(popup, text="valor do Limiar")
+    labelC3.grid(row=3, column=0)
+    v = tk.StringVar(popup, value='3')
+    janC3 = tk.Entry(popup, width=20,textvariable=v)
+    janC3.grid(row=3, column=1)
 
-     # Criando o slider
-    slider2 = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: [atualizar_valorC(val, label2), on_slider_release(int(val))], length=400)
-    slider2.pack(pady=20)
-    
-    
-    # Criando o label para mostrar o valor atual
-    label2 = tk.Label(popup, text="Valor Atual C: 0")
-    label2.pack()
+    labelC4 = tk.Label(popup, text="valor da constante C")
+    labelC4.grid(row=3, column=0)
+    v = tk.StringVar(popup, value='3')
+    janC4 = tk.Entry(popup, width=20,textvariable=v)
+    janC4.grid(row=3, column=1)
 
-    # Bind das teclas de seta para aumentar ou diminuir o valor do slider
-    popup.bind("<Right>", lambda event: aumentar_slider(event, slider, label))  # seta para a direita
-    popup.bind("<Left>", lambda event: diminuir_slider(event, slider, label))   # seta para a esquerda
+    labelJanela2 = tk.Label(popup, text="Tamanho da Janela Erosão")
+    labelJanela2.grid(row=3, column=0)
+    v = tk.StringVar(popup, value='3')
+    jan2 = tk.Entry(popup, width=20,textvariable=v)
+    jan2.grid(row=3, column=1)
 
-    # Usando o comando para atualizar o valor enquanto o slider é movido
-  #  slider.config(command=lambda val: on_slider_release(int(val)) )
+    var1 = tk.StringVar(popup, "erosao")  # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="erosao", variable=var1, value="otsu", command=lambda:t(var1.get())).grid(row=9,column=0)
+    var2 = tk.StringVar(popup, "binarizacao")  # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Binarização", variable=var2, value="binarizacao", command=lambda:t(tipo=var2.get(),janelaE=jan2.get(),limiar=janC3.get())).grid(row=10,column=0)
+   
+
+    b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),jan2.get(),tipo))
+    b.grid(row=6,column=2)
 '''
-    # Criando o slider
-    slider = tk.Scale(popup, from_=1, to=255, orient="horizontal", command=lambda val: atualizar_valor(val, label))
-    slider.pack()
-    
-    # Criando o label para mostrar o valor atual
-    label = tk.Label(popup, text="Valor Atual: 0")
-    label.pack()
 
-    # Criando o label para mostrar o resultado do cálculo (exemplo: média)
-    label_resultado = tk.Label(popup, text="Média Calculada: 0")
-    label_resultado.pack()
-
-    # Bind do evento ButtonRelease-1 ao slider (quando o mouse é solto)
-    slider.bind("<ButtonRelease-1>", lambda event: on_slider_release(slider.get()))
-'''
-    
 
 # Definindo a GUI
 root = tk.Tk()
@@ -925,7 +981,7 @@ file_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Arquivo", menu=file_menu)
 file_menu.add_command(label="Carregar Imagem", command=load_image)
 file_menu.add_command(label="Salvar Imagem", command=salvarImagem)
-file_menu.add_command(label="Criar Valoresm", command=criar_popup)
+file_menu.add_command(label="Criar Valoresm", command=criarPopup)
 
 #file_menu.add_separator()
 #file_menu.add_command(label="Exit", command=root.quit)
@@ -952,6 +1008,22 @@ mediana_menu.add_command(label="7x7", command=lambda: apply_filter("mediana7"))
 #Para Filtro Passa-Alta
 menu_bar.add_command(label="Filtro Sobel", command=lambda: apply_filter("sobel"))
 menu_bar.add_command(label="Filtro Laplaciano", command=lambda: apply_filter("laplaciano"))
+
+segmentacao_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Segmentação", menu=segmentacao_menu)
+segmentacao_menu.add_command(label="Binarização", command=lambda: criarPopup2("binarizacao"))
+segmentacao_menu.add_command(label="Limiarização Global Simples", command=lambda: criarPopup2("globalS"))
+segmentacao_menu.add_command(label="Limiarização Otsu Global", command=lambda: aplicarOperacoes(0,0,'otsuG'))
+segmentacao_menu.add_command(label="Limiarização Média Local", command=lambda: criarPopup('media'))
+segmentacao_menu.add_command(label="Limiarização Otsu Local", command=lambda: criarPopup3("otsuL"))
+segmentacao_menu.add_command(label="Limiarização Bernsen Local", command=lambda: criarPopup3("bernsen"))
+
+morfologia_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Morfologia", menu=morfologia_menu)
+morfologia_menu.add_command(label="Erosão", command=lambda: criarPopup3("erosao"))
+morfologia_menu.add_command(label="Dilatação", command=lambda: criarPopup3("dilatacao"))
+morfologia_menu.add_command(label="Abertura", command=lambda: criarPopup3('abertura'))
+morfologia_menu.add_command(label="Fechamento", command=lambda: criarPopup('fechamento'))
 
 
 
