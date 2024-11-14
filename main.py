@@ -903,21 +903,44 @@ def criarPopup3(tipo):
     b.grid(row=6,column=2)
 
 
-'''
-def t(tipo,janelaE, janela=0,limiar=0,c=0):
-    print(tipo)
-    img_cv = getValueRadio(tipo, janela, limiar, c)
+
+def t(tipoM, tipoS,janelaE, janela=0,limiar=0,c=0):
+    print(tipoS)
+    janelaE,janela,limiar,c = int(janelaE), int(janela), int(limiar), int(c)
+    img_cv = getValueRadio(tipoS, janela, limiar, c)
+    A = 0
+    if tipoM == 'erosao':
+        A = erosao(img_cv,janelaE)
+    elif tipoM =='dilatacao':
+        A = dilatacao(img_cv, janelaE)
+    elif tipoM == 'abertura':
+        A = abertura(img_cv, janelaE)
+    elif tipoM == 'fechamento':
+        A = fechamento(img_cv, janelaE)
     
-    A = erosao(img_cv,janelaE)
     display_image(A, original=False) 
    # print(img_cv)
 
 def getValueRadio(tipo,janela=0,limiar=0,c=0):
+    
     mc = escalaDeCinza(img_cv)
-    if tipo == 'otsu':
+    if tipo == 'otsuG':
+        
         return metodoOtsu(mc)
     elif tipo == 'binarizacao':
         return binarizacao(limiar,mc)
+    
+    elif tipo == 'global':
+        return limiarizacaoGlobal(limiar,mc,mc.shape[0],mc.shape[1])
+    
+    elif tipo == 'otsuL':
+        return limiarizacaoAdaptativaSemPaddingOtsu(mc, janela)
+    
+    elif tipo == 'media':
+        return limiarizacaoAdaptativaMedia(mc, janela,c)
+    
+    elif tipo == 'bernsen':
+        return limiarizacaoAdaptativaMBernsen(mc, janela)
 
 def criarPopup4(tipo):
     # Criando a janela popup (Toplevel)
@@ -931,33 +954,50 @@ def criarPopup4(tipo):
     jan = tk.Entry(popup, width=20,textvariable=v)
     jan.grid(row=1, column=1)
 
-    labelC3 = tk.Label(popup, text="valor do Limiar")
-    labelC3.grid(row=3, column=0)
+    labelLimiar = tk.Label(popup, text="valor do Limiar")
+    labelLimiar.grid(row=3, column=0)
     v = tk.StringVar(popup, value='3')
-    janC3 = tk.Entry(popup, width=20,textvariable=v)
-    janC3.grid(row=3, column=1)
+    lim = tk.Entry(popup, width=20,textvariable=v)
+    lim.grid(row=3, column=1)
 
-    labelC4 = tk.Label(popup, text="valor da constante C")
-    labelC4.grid(row=3, column=0)
+    labelC = tk.Label(popup, text="valor da constante C")
+    labelC.grid(row=5, column=0)
     v = tk.StringVar(popup, value='3')
-    janC4 = tk.Entry(popup, width=20,textvariable=v)
-    janC4.grid(row=3, column=1)
+    c = tk.Entry(popup, width=20,textvariable=v)
+    c.grid(row=5, column=1)
 
-    labelJanela2 = tk.Label(popup, text="Tamanho da Janela Erosão")
-    labelJanela2.grid(row=3, column=0)
+    labelErosao = tk.Label(popup, text="Tamanho da Janela Erosão/Dilatação/Abertura/Fechamento")
+    labelErosao.grid(row=7, column=0)
     v = tk.StringVar(popup, value='3')
-    jan2 = tk.Entry(popup, width=20,textvariable=v)
-    jan2.grid(row=3, column=1)
+    erosao = tk.Entry(popup, width=20,textvariable=v)
+    erosao.grid(row=7, column=1)
 
-    var1 = tk.StringVar(popup, "erosao")  # Create a variable for strings, and initialize the variable
-    tk.Radiobutton(popup, text="erosao", variable=var1, value="otsu", command=lambda:t(var1.get())).grid(row=9,column=0)
-    var2 = tk.StringVar(popup, "binarizacao")  # Create a variable for strings, and initialize the variable
-    tk.Radiobutton(popup, text="Binarização", variable=var2, value="binarizacao", command=lambda:t(tipo=var2.get(),janelaE=jan2.get(),limiar=janC3.get())).grid(row=10,column=0)
+    #var1 = tk.StringVar(popup)  # Create a variable for strings, and initialize the variable
+    #tk.Radiobutton(popup, text="erosao", variable=var1, value="otsu", command=lambda:t(var1.get())).grid(row=9,column=0)
+    var1 = tk.StringVar()  # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Binarização", variable=var1, value="binarizacao", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get(),limiar=lim.get())).grid(row=9,column=0)
+
+     # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Otsu Global", variable=var1, value="otsuG", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get())).grid(row=10,column=0)
+
+      # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Limiarização Global", variable=var1, value="global", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get(),limiar=lim.get())).grid(row=11,column=0)
+
+    # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Otsu Local", variable=var1, value="otsuL", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get(),janela=jan.get())).grid(row=12,column=0)
+
+     # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Limiarização Média Local", variable=var1, value="media", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get(),janela=jan.get(),c=c.get())).grid(row=13,column=0)
+
+      # Create a variable for strings, and initialize the variable
+    tk.Radiobutton(popup, text="Limiarização Bernsen", variable=var1, value="bernsen", command=lambda:t(tipoM=tipo,tipoS=var1.get(),janelaE=erosao.get(),janela=jan.get())).grid(row=14,column=0)
+    
+    var1.set("")
    
 
-    b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),jan2.get(),tipo))
-    b.grid(row=6,column=2)
-'''
+    #b = tk.Button(popup, text="Gerar Imagem", bg="blue", command=lambda:aplicarOperacoes(jan.get(),jan2.get(),tipo))
+    #b.grid(row=16,column=2)
+
 
 
 # Definindo a GUI
@@ -1020,10 +1060,10 @@ segmentacao_menu.add_command(label="Limiarização Bernsen Local", command=lambd
 
 morfologia_menu = tk.Menu(menu_bar, tearoff=0)
 menu_bar.add_cascade(label="Morfologia", menu=morfologia_menu)
-morfologia_menu.add_command(label="Erosão", command=lambda: criarPopup3("erosao"))
-morfologia_menu.add_command(label="Dilatação", command=lambda: criarPopup3("dilatacao"))
-morfologia_menu.add_command(label="Abertura", command=lambda: criarPopup3('abertura'))
-morfologia_menu.add_command(label="Fechamento", command=lambda: criarPopup('fechamento'))
+morfologia_menu.add_command(label="Erosão", command=lambda: criarPopup4("erosao"))
+morfologia_menu.add_command(label="Dilatação", command=lambda: criarPopup4("dilatacao"))
+morfologia_menu.add_command(label="Abertura", command=lambda: criarPopup4('abertura'))
+morfologia_menu.add_command(label="Fechamento", command=lambda: criarPopup4('fechamento'))
 
 
 
