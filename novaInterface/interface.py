@@ -13,7 +13,13 @@ hoverTop = None
 hoverBottom = None
 hoverTop_label = None
 hoverBottom_label = None
-
+submenu_limiar_label = None
+btnSimples = None
+btnOtsu = None
+btnMedia = None
+btnBernsen = None
+clique = 1
+tipo2State = 'Fechado'
 
 '''Criar a janela principal'''
 janela = ctk.CTk() 
@@ -148,6 +154,13 @@ def hover(xF, yF, tipo):
         case 'PB':
             nomeImagemTop = 'hoverTopPB.png'
             nomeImagemBottom = 'hoverBottomPB.png'
+        case 'PA':
+            nomeImagemTop = 'hoverTopPA.png'
+            nomeImagemBottom = 'hoverBottomPA.png'
+        case 'SG':
+            nomeImagemTop = 'hoverTopSG.png'
+            nomeImagemBottom = 'hoverBottomSG.png'
+        
     hoverTop = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemTop),
                                   size=(180, 3))
     # display image with a CTkLabel
@@ -165,6 +178,168 @@ def leave(v):
     hoverTop_label.destroy()
     hoverBottom_label.destroy()
 
+
+def LG():
+    global btnSimples, btnOtsu, btnMedia, btnBernsen
+    
+    btnSimples = ctk.CTkButton(janela,text='Simples',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Simples'))
+    btnSimples.place(x=231,y = 442)#
+
+    #Para aplicar o efeito de hover
+    btnSimples.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
+    btnSimples.bind("<Leave>", command=leave)
+
+    btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Otsu'))
+    btnOtsu.place(x=231,y = 472)#
+    
+    #Para aplicar o efeito de hover
+    btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
+    btnOtsu.bind("<Leave>", command=leave)
+
+def LA():
+    global btnSimples, btnOtsu, btnMedia, btnBernsen
+    
+    btnMedia = ctk.CTkButton(janela,text='Média',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Media'))
+    btnMedia.place(x=231,y = 442)#
+
+    #Para aplicar o efeito de hover
+    btnMedia.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
+    btnMedia.bind("<Leave>", command=leave)
+
+    btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Otsu'))
+    btnOtsu.place(x=231,y = 472)#
+    
+    #Para aplicar o efeito de hover
+    btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
+    btnOtsu.bind("<Leave>", command=leave)
+
+    btnBernsen = ctk.CTkButton(janela,text='Bernsen',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Bernsen'))
+    btnBernsen.place(x=231,y = 502)#
+    
+    #Para aplicar o efeito de hover
+    btnBernsen.bind("<Enter>", command=lambda event: hover(231,502,'SG'))
+    btnBernsen.bind("<Leave>", command=leave)
+
+def abrirfecharJanelaLimiar(tipo, tipo2):
+    global clique
+    global submenu_limiar_label
+    
+    global tipo2State
+   
+    print(f'vv {clique}')
+    if clique % 2 == 0 and tipo2State != "Fechado":
+        print(f'clique {clique}')
+        print(f'tipo2S {tipo2State} {tipo2}')
+        if tipo2 == 'fecharLA' and tipo2State == tipo2:
+            tipo2State = 'Fechado'
+            
+            submenu_limiar_label.destroy()
+            btnOtsu.destroy()
+            btnMedia.destroy()
+            btnBernsen.destroy()
+           
+        elif tipo2 == 'fecharLA' and tipo2State != tipo2:
+            tipo2State = tipo2
+
+            print('faz aí alguma coisa?1')
+            btnSimples.destroy()
+            btnOtsu.destroy()
+            LA()
+        elif tipo2 == 'fecharLG' and tipo2State != tipo2:
+            tipo2State = tipo2
+            print('faz aí alguma coisa?2')
+            btnOtsu.destroy()
+            btnMedia.destroy()
+            btnBernsen.destroy()
+            LG()
+        elif tipo2 == 'fecharLG':
+            tipo2State = 'Fechado'
+            submenu_limiar_label.destroy()
+            btnSimples.destroy()
+            btnOtsu.destroy()
+    
+    elif clique % 2 != 0 and tipo2State != "Fechado":
+        if tipo2 == 'fecharLA' and tipo2State == tipo2:
+            tipo2State = 'Fechado'
+            
+            submenu_limiar_label.destroy()
+            btnOtsu.destroy()
+            btnMedia.destroy()
+            btnBernsen.destroy()
+           
+        elif tipo2 == 'fecharLA' and tipo2State != tipo2:
+            tipo2State = tipo2
+
+            print('faz aí alguma coisa?1')
+            btnSimples.destroy()
+            btnOtsu.destroy()
+            LA()
+        elif tipo2 == 'fecharLG' and tipo2State != tipo2:
+            tipo2State = tipo2
+            print('faz aí alguma coisa?2')
+            btnOtsu.destroy()
+            btnMedia.destroy()
+            btnBernsen.destroy()
+            LG()
+        elif tipo2 == 'fecharLG':
+            tipo2State = 'Fechado'
+            submenu_limiar_label.destroy()
+            btnSimples.destroy()
+            btnOtsu.destroy()
+    
+
+    else:
+        tipo2State = tipo2
+        submenu_limiar_label = ctk.CTkLabel(frameEsquerdo,width=220, height=100,bg_color="#1c1c1c", fg_color="#1c1c1c", text='', font=fontC, text_color="#848484",anchor='nw', padx=10,pady=10)
+        submenu_limiar_label.place(x=220, y=432)
+        clique += 1
+        if tipo == 'LG': 
+            LG()
+            ''' btnSimples = ctk.CTkButton(janela,text='Simples',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Simples'))
+            btnSimples.place(x=231,y = 442)#
+
+            #Para aplicar o efeito de hover
+            btnSimples.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
+            btnSimples.bind("<Leave>", command=leave)
+
+            btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Otsu'))
+            btnOtsu.place(x=231,y = 472)#
+            
+            #Para aplicar o efeito de hover
+            btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
+            btnOtsu.bind("<Leave>", command=leave)'''
+        
+        elif tipo == 'LA':
+            LA()
+            '''btnMedia = ctk.CTkButton(janela,text='Média',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Media'))
+            btnMedia.place(x=231,y = 442)#
+
+            #Para aplicar o efeito de hover
+            btnMedia.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
+            btnMedia.bind("<Leave>", command=leave)
+
+            btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Otsu'))
+            btnOtsu.place(x=231,y = 472)#
+            
+            #Para aplicar o efeito de hover
+            btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
+            btnOtsu.bind("<Leave>", command=leave)
+
+            btnBernsen = ctk.CTkButton(janela,text='Bernsen',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Bernsen'))
+            btnBernsen.place(x=231,y = 502)#
+            
+            #Para aplicar o efeito de hover
+            btnBernsen.bind("<Enter>", command=lambda event: hover(231,502,'SG'))
+            btnBernsen.bind("<Leave>", command=leave)'''
+    
+            
+   
+
+   # btnLimiarG = ctk.CTkButton(janela,text="Simples",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc("Limiar Global Simples"))
+   # btnLimiarG.place(x=230,y=472)#
+    
+
+
 # Cria a canvas para a imagem original com borda (sem background)
 original_image_canvas = ctk.CTkCanvas(janela, width=700, height=700, bg="#171717",  highlightthickness=0)
 original_image_canvas.place(x=320,y=150)
@@ -172,6 +347,13 @@ original_image_canvas.place(x=320,y=150)
 # Cria a canvas para a imagem editada com borda (sem background)
 edited_image_canvas = ctk.CTkCanvas(janela, width=700, height=700, bg="#171717", highlightthickness=0)
 edited_image_canvas.place(x=1060,y=150)
+
+#fonte dos menus
+fontD = ctk.CTkFont(family="Inconsolata",size=14)
+#fonte do menu geral
+fontB = ctk.CTkFont(family="Inconsolata",size=14)
+#Fonte de título de cada seção
+fontC = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
 
 
 '''criar frames'''
@@ -196,10 +378,8 @@ salvarImagem = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/fil
                                   dark_image=Image.open("C:/Users/julia/Downloads/file_download_24dp.png"),
                                   size=(24, 24))
 
-#fonte do menu geral
-fontB = ctk.CTkFont(family="Inconsolata",size=15)
 
-btnCarregarImagem = ctk.CTkButton(janela,text="Carregar Imagem",image=carregarImagem, bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=load_image, font=fontB, hover_color="#101010")
+btnCarregarImagem = ctk.CTkButton(janela,text="Carregar Imagem",image=carregarImagem, bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=load_image, font=fontB, hover=False)
 
 btnCarregarImagem.place(x=10,y=65)
 btnCarregarImagem.configure(cursor="hand2")
@@ -214,32 +394,99 @@ separador_label = ctk.CTkLabel(frameEsquerdo, image=separador, text="",bg_color=
 
 
 '''Menu Passa-Baixa'''
-#fonte dos menus
-fontD = ctk.CTkFont(family="Inconsolata",size=14)
 #bullets points
 marcadorPB = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/marcadorPassaBaixa.png"),
                                   size=(8, 8))
 
 btnGaussiano = ctk.CTkButton(janela,text="Gaussiano",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Gaussiano"), font=fontD,hover=False,image=marcadorPB)
-btnGaussiano.place(x=12,y=180)
+btnGaussiano.place(x=12,y=181)
 #Para aplicar o efeito de hover
-btnGaussiano.bind("<Enter>", command=lambda event: hover(12,180,'PB'))
+btnGaussiano.bind("<Enter>", command=lambda event: hover(12,181,'PB'))
 btnGaussiano.bind("<Leave>", command=leave)
 
 btnMedia = ctk.CTkButton(janela,text="Média",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Media"), font=fontD, image=marcadorPB, hover=False)
-btnMedia.place(x=12,y=210)
-print(abs(4-len('media')))
+btnMedia.place(x=12,y=211)
+
 #Para aplicar o efeito de hover
-btnMedia.bind("<Enter>", command=lambda event: hover(12,210,'PB'))
+btnMedia.bind("<Enter>", command=lambda event: hover(12,211,'PB'))
 btnMedia.bind("<Leave>", command=leave)
 
+btnMediana = ctk.CTkButton(janela,text="Mediana",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Mediana"), font=fontD, image=marcadorPB, hover=False)
+btnMediana.place(x=12,y=241)
 
+#Para aplicar o efeito de hover
+btnMediana.bind("<Enter>", command=lambda event: hover(12,241,'PB'))
+btnMediana.bind("<Leave>", command=leave)
+
+#separador de seção
+separador = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/separador.png"),
+                                  dark_image=Image.open("C:/Users/julia/Downloads/separador.png"),
+                                  size=(220, 2))
+separador_label = ctk.CTkLabel(frameEsquerdo, image=separador, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",height=2).place(x=0,y=271)  
+
+'''Menu Passa-Alta'''
+#bullets points
+marcadorPA = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/marcadorPassaAlta.png"),
+                                  size=(8, 8))
+
+btnSobel = ctk.CTkButton(janela,text="Sobel",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Sobel"), font=fontD,hover=False,image=marcadorPA)
+btnSobel.place(x=12,y=306)
+#Para aplicar o efeito de hover
+btnSobel.bind("<Enter>", command=lambda event: hover(12,306,'PA'))
+btnSobel.bind("<Leave>", command=leave)
+
+btnLaplaciano = ctk.CTkButton(janela,text="Laplaciano",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Laplaciano"), font=fontD, image=marcadorPA, hover=False)
+btnLaplaciano.place(x=12,y=336)
+
+#Para aplicar o efeito de hover
+btnLaplaciano.bind("<Enter>", command=lambda event: hover(12,336,'PA'))
+btnLaplaciano.bind("<Leave>", command=leave)
+
+
+#separador de seção
+separador = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/separador.png"),
+                                  dark_image=Image.open("C:/Users/julia/Downloads/separador.png"),
+                                  size=(220, 2))
+separador_label = ctk.CTkLabel(frameEsquerdo, image=separador, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",height=2).place(x=0,y=366)  
 
 '''Menu Segmentação'''
-btnBinarizacao = ctk.CTkButton(janela,text="Binarização",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Binarizacao")).place(x=12,y=240)
+#bullets points
+marcadorSG = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/marcadorSegmentacao.png"), size=(8, 8))
+btnBinarizacao = ctk.CTkButton(janela,text="Binarização",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Binarizacao"), font=fontD, image=marcadorSG, hover=False)
+btnBinarizacao.place(x=12,y=402)
+
+#Para aplicar o efeito de hover
+btnBinarizacao.bind("<Enter>", command=lambda event: hover(12,402,'SG'))
+btnBinarizacao.bind("<Leave>", command=leave)
+
+btnLimiarG = ctk.CTkButton(janela,text="Limiarização Global",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False)
+btnLimiarG.place(x=12,y=432)#command=lambda:setFuncaoEsc("Limiar Global")
+setaDir = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/setaDireita.png"), size=(24, 24))
+setaDir_label = ctk.CTkLabel(frameEsquerdo,width=0, height=0,bg_color="#1c1c1c", fg_color="#1c1c1c",image=setaDir, text='')
+setaDir_label.place(x=160, y=431.5)
+setaDir_label = ctk.CTkLabel(frameEsquerdo,width=0, height=0,bg_color="#1c1c1c", fg_color="#1c1c1c",image=setaDir, text='')
+setaDir_label.place(x=185, y=463)
+#Para aplicar o efeito de hover
+btnLimiarG.bind("<Enter>", command=lambda event: hover(12,432,'SG'))
+btnLimiarG.bind("<Leave>", command=leave)
+
+btnLimiarA = ctk.CTkButton(janela,text="Limiarização Adaptativa",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False)
+btnLimiarA.place(x=12,y=462)#command=lambda:setFuncaoEsc("Limiar Adaptativo")
+
+#Para aplicar o efeito de hover
+btnLimiarA.bind("<Enter>", command=lambda event: hover(12,462,'SG'))
+btnLimiarA.bind("<Leave>", command=leave)
+
+#submenu limiarização global
+btnLimiarG.bind("<Button-1>", command=lambda event: abrirfecharJanelaLimiar('LG', 'fecharLG'))
+
+btnLimiarA.bind("<Button-1>", command=lambda event: abrirfecharJanelaLimiar('LA', 'fecharLA'))
+
+#btnLimiarA.bind("<ButtonRelease-1>", command=lambda event: fecharJanelaLimiar('LA'))
+
 
 '''Menu Morfologia'''
-btnErosao = ctk.CTkButton(janela,text="Erosão",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Erosao")).place(x=12,y=260)
+#btnErosao = ctk.CTkButton(janela,text="Erosão",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command=lambda:setFuncaoEsc("Erosao")).place(x=12,y=260)
 
 
 
@@ -272,10 +519,13 @@ sliderLimiar.bind("<ButtonRelease-1>",command=a)
 print(FUNCAOESC)
 
 '''Título de cada seção'''
-#Fonte de título de cada seção
-fontC = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
 
-labelTet = ctk.CTkLabel(frameEsquerdo,text="Filtros Passa-Baixa",bg_color="#1c1c1c",fg_color="#1c1c1c",text_color="#848484", font=fontC).place(x=10,y=155)
+
+labelPB = ctk.CTkLabel(frameEsquerdo,text="Filtros Passa-Baixa",bg_color="#1c1c1c",fg_color="#1c1c1c",text_color="#848484", font=fontC).place(x=10,y=155)
+
+labelPA = ctk.CTkLabel(frameEsquerdo,text="Filtros Passa-Alta",bg_color="#1c1c1c",fg_color="#1c1c1c",text_color="#848484", font=fontC).place(x=10,y=281)
+
+labelSeg = ctk.CTkLabel(frameEsquerdo,text="Segmentação",bg_color="#1c1c1c",fg_color="#1c1c1c",text_color="#848484", font=fontC).place(x=10,y=376)
 
 
 
