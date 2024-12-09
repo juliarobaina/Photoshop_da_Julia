@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import cv2
 from PIL import Image, ImageTk
-from funcoesProcessamentoImagem import filtroGaussiano,erosao,binarizacao, escalaDeCinza
+from funcoesProcessamentoImagem import *
 
 FUNCAOESC = 'vazio'
 VALORJANELA = 3
@@ -27,9 +27,37 @@ janela = ctk.CTk()
 
 
 '''configurar a janela principal'''
+'''largura_janela = janela.winfo_screenwidth()
+altura_janela = janela.winfo_screenheight()
+posicao_x = (largura_janela) // 2
+posicao_y = (altura_janela) // 2
+janela.geometry(f"{largura_janela}x{altura_janela}+{0}+{posicao_y}")'''
 janela.geometry("1445x760")
 janela.title("Photoshop da Julia")
 janela.config(bg="#141414")
+'''# Define o modo fullscreen
+janela.attributes('-fullscreen', True)
+
+# Remove a barra de título (opcional)
+janela.overrideredirect(False)
+def fechar():
+    pass
+# Cria a barra de título personalizada
+barra_titulo = ctk.CTkFrame(janela, height=40, corner_radius=0, bg_color="#333333")
+barra_titulo.pack(fill="x", side="top")
+
+# Adiciona um título à barra de título
+titulo = ctk.CTkLabel(barra_titulo, text="Minha Janela Fullscreen", text_color="white", font=("Arial", 14))
+titulo.pack(side="left", padx=10)
+
+# Adiciona um botão de fechar à barra de título
+botao_fechar = ctk.CTkButton(barra_titulo, text="X", text_color="white", command=fechar, corner_radius=10)
+botao_fechar.pack(side="right", padx=10)
+
+# Cria o conteúdo da janela abaixo da barra de título
+conteudo = ctk.CTkLabel(janela, text="Conteúdo da janela", font=("Arial", 20))
+conteudo.pack(pady=50)'''
+
 
 '''funções de interação com a interface e comunicação com o back-end'''
 def setValorJanela(value):
@@ -150,6 +178,23 @@ def display_image(img, original=False):
 def refresh_canvas():
     edited_image_canvas.delete("all")  # Limpa a canvas para exibir a nova imagem
 
+def salvarImagem():
+        
+    if img_pil is None:
+        popup = ctk.CTkToplevel()
+        popup.geometry("240x60")
+        popup.resizable(0,0)
+        popup.wm_title('Operação Inválida')
+        label = tk.Label(popup, text='Operação Inválida, Edite a imagem')
+        label.grid(row=0,column=3)
+    
+    else:
+        nomeArquivo = filedialog.asksaveasfile(mode='w', defaultextension='jpg')
+   
+        if nomeArquivo is None:
+            return
+   
+        img_pil.save(nomeArquivo)
 
 def hover(xF, yF, tipo):
     global hoverBottom_label, hoverTop_label
@@ -191,7 +236,7 @@ def hoverMenuGeral(xF, yF):
     pathImagem = "C:/Users/julia/Downloads/"
     nomeImagemTop = 'hoverTopMG.png'
     nomeImagemBottom = 'hoverBottomMG.png'
-    print(xF)
+    
     hoverTop = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemTop), size=(168, 3))
     # display image with a CTkLabel
     hoverTop_label = ctk.CTkLabel(frameEsquerdo, image=hoverTop, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
@@ -210,8 +255,24 @@ def leave(v):
 
 
 
-def hoverBotaoPropriedades():
-    pass
+def hoverBotaoPropriedades(xF, yF):
+    global hoverBottom_label, hoverTop_label
+    nomeImagemTop = ''
+    nomeImagemBottom = ''
+    pathImagem = "C:/Users/julia/Downloads/"
+    nomeImagemTop = 'hoverTopMG.png'
+    nomeImagemBottom = 'hoverBottomMG.png'
+    
+    hoverTop = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemTop), size=(33, 3))
+    # display image with a CTkLabel
+    hoverTop_label = ctk.CTkLabel(frameEsquerdo, image=hoverTop, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
+    hoverTop_label.place(x = xF + 30,y = yF + 5) #69 
+    
+    hoverBottom = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemBottom), size=(33, 3))
+    
+    # display image with a CTkLabel
+    hoverBottom_label = ctk.CTkLabel(frameEsquerdo, image=hoverBottom, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
+    hoverBottom_label.place(x = xF + 30, y = yF + 35) #90
 
 
 def LG():
@@ -372,8 +433,103 @@ def abrirfecharJanelaLimiar(tipo, tipo2):
 
    # btnLimiarG = ctk.CTkButton(janela,text="Simples",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc("Limiar Global Simples"))
    # btnLimiarG.place(x=230,y=472)#
-    
 
+def menuPropriedades():
+    global btnPropriedade, sliderJanela, my_labelJanela, my_labelNomeJanela, sliderLimiar, my_labelLimiar, my_labelNomeLimiar, sliderValorC, my_labelValorC,my_labelNomeValorC, frameDireito
+
+    frameDireito = ctk.CTkLabel(master=janela, width=300,height=257, fg_color="#1c1c1c", bg_color="#1c1c1c",text='')
+    frameDireito.place(x=1145,y=50)
+    '''Menu Propriedades'''
+    marcadorProp = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/propriedades.png"), size=(24, 24))
+
+    #Botão de abrir e fechar o menu
+    btnPropriedade = ctk.CTkButton(janela,text="Propriedades",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command = fecharMenuPropriedades, text_color="#848484",image=marcadorProp, font=fontD, hover=False)
+    btnPropriedade.place(x=1150,y=60)
+    #Para aplicar o efeito de hover
+    btnPropriedade.bind("<Enter>", command=lambda event: hoverMenuGeral(1150, 60))
+    btnPropriedade.bind("<Leave>", command=leave)
+
+
+
+    #Slider de tamanho da janela (kernel)
+    sliderJanela = ctk.CTkSlider(janela,from_=3, to=255, width=200,height=18, button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorJanela, state="disabled", bg_color="#1c1c1c")
+    sliderJanela.place(x=1185,y=100)
+    sliderJanela.set(3)
+
+    #Label que exibe o valor atual do slide
+    my_labelJanela = ctk.CTkLabel(janela, text=sliderJanela.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontB)
+    my_labelJanela.place(x=1395,y=93)
+
+    #Label que exibe o nome do slide
+    my_labelNomeJanela = ctk.CTkLabel(janela, text="Janela / Kernel", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
+    my_labelNomeJanela.place(x=1185,y=127)
+
+
+    print(FUNCAOESC)
+    #Executa uma função de processamento de imagem ao soltar o mouse do slide
+    #sliderJanela.bind("<ButtonRelease-1>",command=a)
+
+    #Slider do Limiar
+    sliderLimiar = ctk.CTkSlider(janela,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorLimiar, state="normal", bg_color="#1c1c1c")
+    sliderLimiar.place(x=1185,y=170)
+    #inicia o slide na posição 0
+    sliderLimiar.set(0)
+    #Label que exibe o valor atual do slide
+    my_labelLimiar = ctk.CTkLabel(janela, text=sliderLimiar.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
+    my_labelLimiar.place(x=1395,y=163)
+    #Executa uma função de processamento de imagem ao soltar o mouse do slide
+    #sliderLimiar.bind("<ButtonRelease-1>",command=a)
+    #Label que exibe o nome do slide
+    my_labelNomeLimiar = ctk.CTkLabel(janela, text="Limiar", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
+    my_labelNomeLimiar.place(x=1185,y=197)
+
+    #Slider do Valor C
+    sliderValorC = ctk.CTkSlider(janela,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorC, state="normal", bg_color="#1c1c1c")
+    sliderValorC.place(x=1185,y=240)
+    #inicia o slide na posição 0
+    sliderValorC.set(0)
+    #Label que exibe o valor atual do slide
+    my_labelValorC = ctk.CTkLabel(janela, text=sliderValorC.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
+    my_labelValorC.place(x=1395,y=233)
+    #Executa uma função de processamento de imagem ao soltar o mouse do slide
+    #sliderLimiar.bind("<ButtonRelease-1>",command=a)
+    #Label que exibe o nome do slide
+    my_labelNomeValorC = ctk.CTkLabel(janela, text="Valor C", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
+    my_labelNomeValorC.place(x=1185,y=267)
+
+
+def botaoPropriedades():
+    iconProp = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/propriedades.png"), size=(24, 24))
+   # labelBotaoProp = ctk.CTkLabel(master=janela, width=40,height=5, fg_color="red", bg_color="#1c1c1c",text='')
+    #labelBotaoProp.place(x=1145,y=50)
+    global btnIconProp
+    btnIconProp = ctk.CTkButton(master=janela, bg_color="#1c1c1c", image=iconProp, text='', fg_color="#1c1c1c", width=15,height=15, hover=False, command=abrirMenuPropriedades, corner_radius=0)
+    btnIconProp.place(x = 1408, y = 65)
+
+    #Para aplicar o efeito de hover
+    btnIconProp.bind("<Enter>", command=lambda event: hoverBotaoPropriedades(1377,60))
+    btnIconProp.bind("<Leave>", command=leave)
+
+def abrirMenuPropriedades():
+    btnIconProp.destroy()
+    leave('')
+    menuPropriedades()
+
+def fecharMenuPropriedades():
+    btnPropriedade.destroy()
+    sliderJanela.destroy()
+    my_labelJanela.destroy()
+    my_labelNomeJanela.destroy()
+    sliderLimiar.destroy()
+    my_labelLimiar.destroy()
+    my_labelNomeLimiar.destroy()
+    sliderValorC.destroy()
+    my_labelValorC.destroy()
+    my_labelNomeValorC.destroy()
+    leave('')
+    frameDireito.destroy()
+    botaoPropriedades()
+    print('clicou')
 
 # Cria a canvas para a imagem original com borda (sem background)
 original_image_canvas = ctk.CTkCanvas(janela, width=700, height=700, bg="#171717",  highlightthickness=0)
@@ -393,7 +549,7 @@ fontC = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
 
 '''criar frames'''
 frameEsquerdo = ctk.CTkFrame(master=janela,width=220,height=1000,fg_color="#1c1c1c", bg_color="#1c1c1c").place(x=0,y=0)
-frameDireito = ctk.CTkFrame(master=janela, width=300,height=257, fg_color="#1c1c1c", bg_color="#1c1c1c").place(x=1145,y=50)
+
 #frameImgOriginal = ctk.CTkFrame(master=janela, width=500,height=500, fg_color="#171717", bg_color="#171717").place(x=250,y=150)
 #frameImgModificada = ctk.CTkFrame(master=janela, width=500,height=500, fg_color="#171717", bg_color="#171717").place(x=760,y=150)
 
@@ -409,7 +565,7 @@ logo_label = ctk.CTkLabel(frameEsquerdo, image=logo, text="",bg_color="#1c1c1c",
 carregarImagem = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/add_photo_alternate_24dp.png"),
                                   dark_image=Image.open("C:/Users/julia/Downloads/add_photo_alternate_24dp.png"),
                                   size=(24, 24))
-salvarImagem = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/file_download_24dp.png"),
+salvarImagemIcon = ctk.CTkImage(light_image=Image.open("C:/Users/julia/Downloads/file_download_24dp.png"),
                                   dark_image=Image.open("C:/Users/julia/Downloads/file_download_24dp.png"),
                                   size=(24, 24))
 
@@ -419,7 +575,7 @@ btnCarregarImagem = ctk.CTkButton(janela,text="Carregar Imagem",image=carregarIm
 btnCarregarImagem.place(x=10,y=65)
 #btnCarregarImagem.configure(cursor="hand2")
 
-btnSalvarImagem = ctk.CTkButton(janela,text="Salvar Imagem",image=salvarImagem,bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontB,hover=False, command= '', text_color="#fefefe")
+btnSalvarImagem = ctk.CTkButton(janela,text="Salvar Imagem",image=salvarImagemIcon,bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontB,hover=False, command= salvarImagem, text_color="#fefefe")
 btnSalvarImagem.place(x=10,y=105)
 
 #Para aplicar o efeito de hover
@@ -572,66 +728,10 @@ btnFechamento.place(x=12,y=618)
 btnFechamento.bind("<Enter>", command=lambda event: hover(12,618,'MF'))
 btnFechamento.bind("<Leave>", command=leave)
 
-
-
 '''Menu Propriedades'''
-marcadorProp = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/propriedades.png"), size=(24, 24))
-
-#Botão de abrir e fechar o menu
-btnPropriedade = ctk.CTkButton(janela,text="Propriedades",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command="", text_color="#848484",image=marcadorProp, font=fontD, hover=False)
-btnPropriedade.place(x=1150,y=60)
-#Para aplicar o efeito de hover
-btnPropriedade.bind("<Enter>", command=lambda event: hoverMenuGeral(1150, 60))
-btnPropriedade.bind("<Leave>", command=leave)
-
-btnPropriedade.bind("<Button-1>", command=lambda event: fecharMenuPropriedades)
+botaoPropriedades()
 
 
-#Slider de tamanho da janela (kernel)
-sliderJanela = ctk.CTkSlider(frameDireito,from_=3, to=255, width=200,height=18, button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorJanela, state="disabled", bg_color="#1c1c1c")
-sliderJanela.place(x=1185,y=100)
-sliderJanela.set(3)
-
-#Label que exibe o valor atual do slide
-my_labelJanela = ctk.CTkLabel(frameDireito, text=sliderJanela.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontB)
-my_labelJanela.place(x=1395,y=93)
-
-#Label que exibe o nome do slide
-my_labelNomeJanela = ctk.CTkLabel(frameDireito, text="Janela / Kernel", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-my_labelNomeJanela.place(x=1185,y=127)
-
-
-print(FUNCAOESC)
-#Executa uma função de processamento de imagem ao soltar o mouse do slide
-#sliderJanela.bind("<ButtonRelease-1>",command=a)
-
-#Slider do Limiar
-sliderLimiar = ctk.CTkSlider(frameDireito,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorLimiar, state="normal", bg_color="#1c1c1c")
-sliderLimiar.place(x=1185,y=170)
-#inicia o slide na posição 0
-sliderLimiar.set(0)
-#Label que exibe o valor atual do slide
-my_labelLimiar = ctk.CTkLabel(frameDireito, text=sliderLimiar.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
-my_labelLimiar.place(x=1395,y=163)
-#Executa uma função de processamento de imagem ao soltar o mouse do slide
-#sliderLimiar.bind("<ButtonRelease-1>",command=a)
-#Label que exibe o nome do slide
-my_labelNomeLimiar = ctk.CTkLabel(frameDireito, text="Limiar", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-my_labelNomeLimiar.place(x=1185,y=197)
-
-#Slider do Valor C
-sliderValorC = ctk.CTkSlider(frameDireito,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorC, state="normal", bg_color="#1c1c1c")
-sliderValorC.place(x=1185,y=240)
-#inicia o slide na posição 0
-sliderValorC.set(0)
-#Label que exibe o valor atual do slide
-my_labelValorC = ctk.CTkLabel(frameDireito, text=sliderValorC.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
-my_labelValorC.place(x=1395,y=233)
-#Executa uma função de processamento de imagem ao soltar o mouse do slide
-#sliderLimiar.bind("<ButtonRelease-1>",command=a)
-#Label que exibe o nome do slide
-my_labelNomeValorC = ctk.CTkLabel(frameDireito, text="Valor C", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-my_labelNomeValorC.place(x=1185,y=267)
 
 '''Título de cada seção'''
 labelPB = ctk.CTkLabel(frameEsquerdo,text="Filtros Passa-Baixa", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#848484", font=fontC).place(x=10,y=155)
