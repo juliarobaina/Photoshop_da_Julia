@@ -205,16 +205,46 @@ def filtroMediana(tamanhoKernel:int,img_cv):
     return cv2.merge((b, g, r))
 
 
-def kernelSobel():
-    
-    kernelHorizontal = np.array([[-1, -2, -1],
-                    [0, 0, 0],
-                    [1, 2, 1]
-                    ])
-    kernelVertical = np.array([[-1, 0, 1],
-                    [-2, 0, 2],
-                    [-1, 0, 1]
-                    ])
+def kernelSobel(tamanho: int):
+
+    if tamanho == 3:
+        kernelHorizontal = np.array([[-1, -2, -1],
+                                    [0, 0, 0],
+                                    [1, 2, 1]
+                                    ])
+        kernelVertical = np.array([[-1, 0, 1],
+                                    [-2, 0, 2],
+                                    [-1, 0, 1]
+                                    ])
+    elif tamanho == 5:
+        kernelVertical = np.array([[-1, -2, 0, 2, 1],
+                                    [-4, -8, 0, 8, 4],
+                                    [-6, -12, 0, 12, 6],
+                                    [-4, -8, 0, 8, 4],
+                                    [-1, -2, 0, 2, 1]
+                                    ])
+        kernelHorizontal = np.array([[-1, -4, -6, -4, -1],
+                                    [-2, -8, -12, -8, -2],
+                                    [0, 0, 0, 0, 0],
+                                    [2, 8, 12, 8, 2],
+                                    [1, 4, 6, 4, 1]
+                                    ])
+    elif tamanho == 7:
+        kernelVertical = np.array([[-1, -2, -3, 0, 3, 2, 1],
+                                    [-4, -8, -12, 0, 12, 8, 4],
+                                    [-6, -12, -18, 0, 18, 12, 6],
+                                    [-4, -8, -12, 0, 12, 8, 4],
+                                    [-1, -2, -3, 0, 3, 2, 1]
+                                    ])
+        kernelHorizontal = np.array([[-1, -4, -6, -4, -1, 0, 1],
+                                    [-2, -8, -12, -8, -2, 0, 2],
+                                    [-3, -12, -18, -12, -3, 0, 3],
+                                    [0, 0, 0, 0, 0, 0, 0],
+                                    [3, 12, 18, 12, 3, 0, -3],
+                                    [2, 8, 12, 8, 2, 0, -2],
+                                    [1, 4, 6, 4, 1, 0, -1]
+                                    ])
+   
     return kernelHorizontal, kernelVertical
 
 def kernelMedia(tamanho:int):
@@ -287,20 +317,38 @@ def kernelGaussiano(tamanho:int):
     
     return kernel, divisor
 
-def kernelLaplaciano():
-    kernel = np.array([[-1, -1, -1],
+def kernelLaplaciano(tamanho:int):
+    if tamanho == 3:
+        kernel = np.array([[-1, -1, -1],
                       [-1, 8, -1],
                       [-1, -1, -1]])
+    elif tamanho == 5:
+        kernel = np.array([[0, 1, 1, 1, 0],
+                           [1,-1, -2, -1, 1],
+                           [1, -2, -4, -2, 1],
+                           [1, -1, -2, -1, 1],
+                           [0, 1, 1, 1, 0]])
+
+    elif tamanho == 7:
+        kernel = np.array([[0, 0, 1, 1, 1, 0, 0],
+                           [0, 1, 2, 2, 2, 1, 0],
+                           [1, 2, 4, 8, 4, 2, 1],
+                           [1, 2, 8, -24, 8, 2, 1],
+                           [1, 2, 4, 8, 4, 2, 1],
+                           [0, 1, 2, 2, 2, 1, 0],
+                           [0, 0, 1, 1, 1, 0, 0]])
+    
     return kernel
 
-def filtroSobel():
-    imgGaussiano = filtroGaussiano(3)
+def filtroSobel(tamanho:int, img_cv):
+
+    imgGaussiano = filtroGaussiano(3, img_cv)
 
     matrizCinza = escalaDeCinza(imgGaussiano)
    
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
-    kernelHorizontal, kernelVertical = kernelSobel()
+    kernelHorizontal, kernelVertical = kernelSobel(tamanho)
    
     ordemMatrizKernel = 3
     bordas = ordemMatrizKernel // 2
@@ -326,14 +374,14 @@ def filtroSobel():
    
     return matrizCinza
 
-def filtroLaplaciano():
-    imgGaussiano = filtroGaussiano(3)
+def filtroLaplaciano(tamanho:int, img_cv):
+    imgGaussiano = filtroGaussiano(3, img_cv)
 
     matrizCinza = escalaDeCinza(imgGaussiano)
 
     linhasMatrizImagem, colunasMatrizImagem = matrizCinza.shape 
     
-    kernel = kernelLaplaciano()
+    kernel = kernelLaplaciano(tamanho)
    
     ordemMatrizKernel = 3
     bordas = ordemMatrizKernel // 2
@@ -359,7 +407,7 @@ def binarizacao(usuarioT, matrizCinza):
     
     return matrizCinza
 
-def limiarizacaoGlobal(usuarioT:int, matriz,linhasMatriz, colunasMatriz):
+def limiarizacaoGlobal(usuarioT:int, matriz, linhasMatriz, colunasMatriz):
    
     criterioParada = 256
    
@@ -680,3 +728,6 @@ def fechamento(matriz, janela):
     imgDilatacao = dilatacao(matriz, janela)
     imgErosao = erosao(imgDilatacao, janela)
     return imgErosao
+
+
+

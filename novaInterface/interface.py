@@ -4,9 +4,11 @@ from PIL import Image, ImageTk
 from funcoesProcessamentoImagem import *
 
 FUNCAOESC = 'vazio'
+FUNCAOESC2 = []
 VALORJANELA = 3
 VALORLIMIAR = 0
 VALORVALORC = 0
+VALORKERNEL = 3
 img_cv = None
 img_pil = None
 cambalacho = 1
@@ -21,7 +23,12 @@ btnMedia = None
 btnBernsen = None
 clique = 1
 tipo2State = 'Fechado'
-
+sliderOnOff = 0
+sliderOnOff2 = 0
+sliderOnOff3 = 0
+sliderOnOff4 = 0
+cliquePOPUP1 = 0
+cliquePOPUP2 = 0 
 '''Criar a janela principal'''
 janela = ctk.CTk() 
 
@@ -35,6 +42,7 @@ janela.geometry(f"{largura_janela}x{altura_janela}+{0}+{posicao_y}")'''
 janela.geometry("1445x760")
 janela.title("Photoshop da Julia")
 janela.config(bg="#141414")
+janela.resizable(False, False)
 '''# Define o modo fullscreen
 janela.attributes('-fullscreen', True)
 
@@ -64,16 +72,30 @@ def setValorJanela(value):
     my_labelJanela.configure(text=int(value))
     global VALORJANELA 
     VALORJANELA = int(value)
+    global sliderOnOff4
+    sliderOnOff4 = 1
+
+
+def setValorKernel(value):
+    my_labelKernel.configure(text=int(value))
+    global VALORKERNEL 
+    VALORKERNEL = int(value)
+    global sliderOnOff
+    sliderOnOff = 1
 
 def setValorLimiar(value):
     my_labelLimiar.configure(text=int(value))
     global VALORLIMIAR 
     VALORLIMIAR = int(value)
+    global sliderOnOff2
+    sliderOnOff2 = 1
 
 def setValorC(value):
     my_labelValorC.configure(text=int(value))
     global VALORVALORC 
     VALORVALORC = int(value)
+    global sliderOnOff3
+    sliderOnOff3 = 1
 
 def a(val):
     print(val)
@@ -110,37 +132,182 @@ def setFuncaoEsc(esc):
     FUNCAOESC = esc
     filtered_img = img_cv
     global cambalacho
-    if FUNCAOESC == 'Gaussiano' or FUNCAOESC == 'Media':
-        #number_of_steps=126 tem que fazer conta tipo como é de 3 a 255, fica (255 -3) / 126 pro slide pular de 2 em 2
-        sliderJanela.configure(state="normal", number_of_steps=126)#desbloqueia slide após escolher uma opção, fazer personalizado
-        filtered_img = filtroGaussiano(VALORJANELA, img_cv)
+    global sliderJanela
+    global sliderKernel
+    global sliderLimiar
+    global sliderValorC
+    positivo = 0
+    global sliderOnOff
+    global sliderOnOff2
+    global sliderOnOff3
+    global sliderOnOff4
+    global FUNCAOESC2
+    w = ['Binarizacao', 'Limiar Global Simples', 'Limiar Global Otsu', 'Limiar Adapt Media', 'Limiar Adapt Otsu', 'Limiar Adapt Bernsen']
+    z = ['Fechamento', 'Abertura', 'Dilatacao', 'Erosao']
+    #elif sliderOnOff == 0 or sliderOnOff2 == 0 and sliderOnOff3 == 0 and sliderOnOff4 == 0:
+    if img_cv is None:
+        popupJanela(f'Carregue uma imagem.','Ok', 0)
+    
+    else:
+
+
+        if FUNCAOESC == 'Gaussiano' and sliderOnOff:
+            #number_of_steps=126 tem que fazer conta tipo como é de 3 a 255, fica (255 -3) / 126 pro slide pular de 2 em 2
+            #sliderKernel.configure(from_=3, to=7, number_of_steps=2)#desbloqueia slide após escolher uma opção, fazer personalizado
+            filtered_img = filtroGaussiano(VALORKERNEL, img_cv)
+            img_cv=filtered_img
+            print(VALORKERNEL)
+            #sliderOnOff = 0
+            positivo = 1
+            FUNCAOESC2.append(FUNCAOESC)
+            # Exibe a imagem editada
+        elif FUNCAOESC == 'Media' and sliderOnOff:
+            #number_of_steps=126 tem que fazer conta tipo como é de 3 a 255, fica (255 -3) / 126 pro slide pular de 2 em 2
+            #sliderKernel.configure(from_=3, to=7, number_of_steps=2, state="normal")#desbloqueia slide após escolher uma opção, fazer personalizado
+            #filtered_img = filtroGaussiano(VALORJANELA, img_cv)
+            filtered_img = filtroMedia(VALORKERNEL, img_cv)
+            img_cv=filtered_img
+            #sliderOnOff = 0
+            positivo = 1
+            FUNCAOESC2.append(FUNCAOESC)
+
+            # Exibe a imagem editada
+        elif FUNCAOESC == 'Mediana' and sliderOnOff:
+            filtered_img = filtroMediana(VALORKERNEL, img_cv)
+            img_cv=filtered_img
+            positivo = 1
+            FUNCAOESC2.append(FUNCAOESC)
+
+
+        elif FUNCAOESC == 'Sobel' and sliderOnOff:
+            filtered_img = filtroSobel(VALORKERNEL, img_cv)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
             
-        img_cv=filtered_img
-        # Exibe a imagem editada
-    elif FUNCAOESC == 'Erosao':
-       # 
-        filtered_img = erosao(img_cv, VALORJANELA)
+            positivo = 1
+            print('Entrei sobel')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Laplaciano' and sliderOnOff:
+            filtered_img = filtroLaplaciano(VALORKERNEL, img_cv)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
             
-        img_cv=filtered_img
-    elif FUNCAOESC == 'Binarizacao':
-        #sliderLimiar.configure(state="normal")
-        print(f'limiar = {VALORLIMIAR}')
-        print(img_cv)
-        if cambalacho == 1:
+            positivo = 1
+            print('laplace')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Binarizacao' and sliderOnOff2:
+            #sliderLimiar.configure(state="normal")
+            print(f'limiar = {VALORLIMIAR}')
             filtered_img = escalaDeCinza(img_cv)
-            cambalacho = 2
-        print(f'cambalacho {cambalacho}')
-        print(filtered_img.shape)
-        filtered_img = binarizacao(VALORLIMIAR, filtered_img)
-        img_cv=filtered_img
-    print(FUNCAOESC)
-    display_image(filtered_img, original=False) 
+            filtered_img = binarizacao(VALORLIMIAR, filtered_img)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Entrei bina')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Limiar Global Simples' and sliderOnOff2:
+            print(f'ss {VALORLIMIAR} {filtered_img} {filtered_img.shape[0]}')
+            filtered_img = escalaDeCinza(filtered_img)
+            filtered_img = limiarizacaoGlobal(VALORLIMIAR, filtered_img, filtered_img.shape[0], filtered_img.shape[1])
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Entrei LGS')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Limiar Global Otsu':
+            print(f'ss {VALORLIMIAR} {filtered_img} {filtered_img.shape[0]}')
+            filtered_img = escalaDeCinza(filtered_img)
+            filtered_img = metodoOtsu(filtered_img)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Entrei Otsu')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Limiar Adapt Media' and sliderOnOff3 and sliderOnOff4:
+            filtered_img = escalaDeCinza(filtered_img)
+            filtered_img = limiarizacaoAdaptativaMedia(filtered_img, VALORJANELA, VALORVALORC)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Entrei Adap Media')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Limiar Adapt Otsu' and sliderOnOff4:
+            filtered_img = escalaDeCinza(filtered_img)
+            filtered_img = limiarizacaoAdaptativaSemPaddingOtsu(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            FUNCAOESC2.append(FUNCAOESC)
+
+            print('Entrei Adap Otsu')
+        elif FUNCAOESC == 'Limiar Adapt Bernsen' and sliderOnOff4:
+            filtered_img = escalaDeCinza(filtered_img)
+            filtered_img = limiarizacaoAdaptativaMBernsen(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Entrei Adap Bernsen')
+            FUNCAOESC2.append(FUNCAOESC)
+
+
+        elif FUNCAOESC == 'Erosao' and sliderOnOff4 and any(item in w for item in FUNCAOESC2):
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_RGB2BGR)
+            filtered_img = escalaDeCinza(img_cv)
+            filtered_img = erosao(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('Erosao')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        
+        elif FUNCAOESC == 'Dilatacao' and sliderOnOff4 and  any(item in w for item in FUNCAOESC2):
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_RGB2BGR)
+            filtered_img = escalaDeCinza(img_cv)
+            filtered_img = dilatacao(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('dilata')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        
+        elif FUNCAOESC == 'Abertura' and sliderOnOff4 and  any(item in w for item in FUNCAOESC2):
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_RGB2BGR)
+            filtered_img = escalaDeCinza(img_cv)
+            filtered_img = abertura(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('abre')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        elif FUNCAOESC == 'Fechamento' and sliderOnOff4 and any(item in w for item in FUNCAOESC2):
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_RGB2BGR)
+            filtered_img = escalaDeCinza(img_cv)
+            filtered_img = fechamento(filtered_img, VALORJANELA)
+            img_cv = cv2.cvtColor(filtered_img, cv2.COLOR_BGR2RGB)
+            positivo = 1
+            print('fecha')
+            FUNCAOESC2.append(FUNCAOESC)
+
+        else:
+            if img_cv is None:
+                popupJanela(f'Carregue uma imagem.','Ok', 0)
+            else:
+                print()
+                print(f'qq{FUNCAOESC2} qq{FUNCAOESC}')
+                if not any(item in w for item in FUNCAOESC2) and FUNCAOESC in z:
+                    popupJanela(f'Aplique uma operação de Segmentação','Entendi', 1)
+                elif sliderOnOff == 0 or sliderOnOff2 == 0 and sliderOnOff3 == 0 and sliderOnOff4 == 0:
+                    popupJanela(f'Escolha uma propriedade e tente novamente.','Entendi', 1)
+
+        print(FUNCAOESC)
+        if positivo:
+            print(f'entrei')
+            display_image(filtered_img, original=False) 
 
 
 
 def load_image():
     global img_cv
-   
+    global FUNCAOESC2
+    FUNCAOESC2.clear()
     file_path = ctk.filedialog.askopenfile(title='Escolha uma imagem', filetypes=[("Arquivos de imagem", "*.jpeg;*.jpg;*.jfif;*.png;*.bmp;*.tif;*.tiff;*.gif;*.webp;*.pbm;*.pgm;*.ppm;*.heif;*.heic")])#verificar extensões depois
     if file_path:
         print(file_path)
@@ -181,13 +348,7 @@ def refresh_canvas():
 def salvarImagem():
         
     if img_pil is None:
-        popup = ctk.CTkToplevel()
-        popup.geometry("240x60")
-        popup.resizable(0,0)
-        popup.wm_title('Operação Inválida')
-        label = tk.Label(popup, text='Operação Inválida, Edite a imagem')
-        label.grid(row=0,column=3)
-    
+        popupJanela('Carregue uma Imagem', 'Ok',0)    
     else:
         nomeArquivo = filedialog.asksaveasfile(mode='w', defaultextension='jpg')
    
@@ -253,10 +414,15 @@ def leave(v):
     hoverTop_label.destroy()
     hoverBottom_label.destroy()
 
+def leaveAlt(v):
+    hoverTop_label.destroy()
+    hoverBottom_label.destroy()
+    print('Entre??')
+    labelAltProp.destroy()
 
 
 def hoverBotaoPropriedades(xF, yF):
-    global hoverBottom_label, hoverTop_label
+    global hoverBottom_label, hoverTop_label, labelAltProp
     nomeImagemTop = ''
     nomeImagemBottom = ''
     pathImagem = "C:/Users/julia/Downloads/"
@@ -265,14 +431,17 @@ def hoverBotaoPropriedades(xF, yF):
     
     hoverTop = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemTop), size=(33, 3))
     # display image with a CTkLabel
-    hoverTop_label = ctk.CTkLabel(frameEsquerdo, image=hoverTop, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
+    hoverTop_label = ctk.CTkLabel(janela, image=hoverTop, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
     hoverTop_label.place(x = xF + 30,y = yF + 5) #69 
     
     hoverBottom = ctk.CTkImage(light_image=Image.open(pathImagem + nomeImagemBottom), size=(33, 3))
     
     # display image with a CTkLabel
-    hoverBottom_label = ctk.CTkLabel(frameEsquerdo, image=hoverBottom, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
+    hoverBottom_label = ctk.CTkLabel(janela, image=hoverBottom, text="",bg_color="#1c1c1c",fg_color="#1c1c1c",width=0,height=0)
     hoverBottom_label.place(x = xF + 30, y = yF + 35) #90
+
+    labelAltProp = ctk.CTkLabel(janela, text='Propriedades',bg_color="#1c1c1c", fg_color="#1c1c1c",width=2, height=2,font=fontD, text_color="#848484",padx=5,pady=5,corner_radius=1)
+    labelAltProp.place(x = xF - 64, y = yF + 30)
 
 
 def LG():
@@ -390,43 +559,10 @@ def abrirfecharJanelaLimiar(tipo, tipo2):
         submenu_limiar_label.place(x=220, y=432)
         clique += 1
         if tipo == 'LG': 
-            LG()
-            ''' btnSimples = ctk.CTkButton(janela,text='Simples',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Simples'))
-            btnSimples.place(x=231,y = 442)#
-
-            #Para aplicar o efeito de hover
-            btnSimples.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
-            btnSimples.bind("<Leave>", command=leave)
-
-            btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Global Otsu'))
-            btnOtsu.place(x=231,y = 472)#
-            
-            #Para aplicar o efeito de hover
-            btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
-            btnOtsu.bind("<Leave>", command=leave)'''
-        
+            LG()        
         elif tipo == 'LA':
             LA()
-            '''btnMedia = ctk.CTkButton(janela,text='Média',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Media'))
-            btnMedia.place(x=231,y = 442)#
-
-            #Para aplicar o efeito de hover
-            btnMedia.bind("<Enter>", command=lambda event: hover(231,442,'SG'))
-            btnMedia.bind("<Leave>", command=leave)
-
-            btnOtsu = ctk.CTkButton(janela,text='Otsu',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Otsu'))
-            btnOtsu.place(x=231,y = 472)#
             
-            #Para aplicar o efeito de hover
-            btnOtsu.bind("<Enter>", command=lambda event: hover(231,472,'SG'))
-            btnOtsu.bind("<Leave>", command=leave)
-
-            btnBernsen = ctk.CTkButton(janela,text='Bernsen',bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", font=fontD, image=marcadorSG, hover=False, command=lambda:setFuncaoEsc('Limiar Adapt Bernsen'))
-            btnBernsen.place(x=231,y = 502)#
-            
-            #Para aplicar o efeito de hover
-            btnBernsen.bind("<Enter>", command=lambda event: hover(231,502,'SG'))
-            btnBernsen.bind("<Leave>", command=leave)'''
     
             
    
@@ -435,9 +571,9 @@ def abrirfecharJanelaLimiar(tipo, tipo2):
    # btnLimiarG.place(x=230,y=472)#
 
 def menuPropriedades():
-    global btnPropriedade, sliderJanela, my_labelJanela, my_labelNomeJanela, sliderLimiar, my_labelLimiar, my_labelNomeLimiar, sliderValorC, my_labelValorC,my_labelNomeValorC, frameDireito
+    global btnPropriedade, sliderJanela, my_labelJanela, my_labelNomeJanela, sliderLimiar, my_labelLimiar, my_labelNomeLimiar, sliderValorC, my_labelValorC,my_labelNomeValorC, frameDireito, sliderKernel, my_labelKernel, my_labelNomeKernel
 
-    frameDireito = ctk.CTkLabel(master=janela, width=300,height=257, fg_color="#1c1c1c", bg_color="#1c1c1c",text='')
+    frameDireito = ctk.CTkLabel(master=janela, width=300,height=327, fg_color="#1c1c1c", bg_color="#1c1c1c",text='')
     frameDireito.place(x=1145,y=50)
     '''Menu Propriedades'''
     marcadorProp = ctk.CTkImage(Image.open("C:/Users/julia/Downloads/propriedades.png"), size=(24, 24))
@@ -445,24 +581,38 @@ def menuPropriedades():
     #Botão de abrir e fechar o menu
     btnPropriedade = ctk.CTkButton(janela,text="Propriedades",bg_color="#1c1c1c", width=4, height=5, fg_color="#1c1c1c", command = fecharMenuPropriedades, text_color="#848484",image=marcadorProp, font=fontD, hover=False)
     btnPropriedade.place(x=1150,y=60)
+    btnPropriedade.configure(cursor="arrow")
     #Para aplicar o efeito de hover
     btnPropriedade.bind("<Enter>", command=lambda event: hoverMenuGeral(1150, 60))
-    btnPropriedade.bind("<Leave>", command=leave)
+    btnPropriedade.bind("<Leave>", command=leaveAlt)
 
 
 
     #Slider de tamanho da janela (kernel)
-    sliderJanela = ctk.CTkSlider(janela,from_=3, to=255, width=200,height=18, button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorJanela, state="disabled", bg_color="#1c1c1c")
-    sliderJanela.place(x=1185,y=100)
+    sliderKernel = ctk.CTkSlider(janela,from_=3, to=7, width=200,height=18, button_color="#9518f5", button_hover_color="#A131F6", progress_color="#9518f5", command=setValorKernel, bg_color="#1c1c1c", number_of_steps=2)
+    sliderKernel.place(x=1185,y=100)
+    sliderKernel.set(3)
+
+    #Label que exibe o valor atual do slide
+    my_labelKernel = ctk.CTkLabel(janela, text=int(sliderKernel.get()), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontB)
+    my_labelKernel.place(x=1395,y=93)
+
+    #Label que exibe o nome do slide
+    my_labelNomeKernel = ctk.CTkLabel(janela, text="Kernel - Filtros", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
+    my_labelNomeKernel.place(x=1185,y=127)
+
+     #Slider de tamanho da janela (kernel)
+    sliderJanela = ctk.CTkSlider(janela,from_=3, to=255, width=200,height=18, button_color="#9518f5", button_hover_color="#A131F6", progress_color="#9518f5", command=setValorJanela, bg_color="#1c1c1c")
+    sliderJanela.place(x=1185,y=170)
     sliderJanela.set(3)
 
     #Label que exibe o valor atual do slide
     my_labelJanela = ctk.CTkLabel(janela, text=sliderJanela.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontB)
-    my_labelJanela.place(x=1395,y=93)
+    my_labelJanela.place(x=1395,y=163)
 
     #Label que exibe o nome do slide
-    my_labelNomeJanela = ctk.CTkLabel(janela, text="Janela / Kernel", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-    my_labelNomeJanela.place(x=1185,y=127)
+    my_labelNomeJanela = ctk.CTkLabel(janela, text="Janela - Segmentação e Morfologia", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
+    my_labelNomeJanela.place(x=1185,y=197)
 
 
     print(FUNCAOESC)
@@ -470,32 +620,32 @@ def menuPropriedades():
     #sliderJanela.bind("<ButtonRelease-1>",command=a)
 
     #Slider do Limiar
-    sliderLimiar = ctk.CTkSlider(janela,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorLimiar, state="normal", bg_color="#1c1c1c")
-    sliderLimiar.place(x=1185,y=170)
+    sliderLimiar = ctk.CTkSlider(janela,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#A131F6", progress_color="#9518f5", command=setValorLimiar, state="normal", bg_color="#1c1c1c")
+    sliderLimiar.place(x=1185,y=240)
     #inicia o slide na posição 0
     sliderLimiar.set(0)
     #Label que exibe o valor atual do slide
     my_labelLimiar = ctk.CTkLabel(janela, text=sliderLimiar.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
-    my_labelLimiar.place(x=1395,y=163)
+    my_labelLimiar.place(x=1395,y=233)
     #Executa uma função de processamento de imagem ao soltar o mouse do slide
     #sliderLimiar.bind("<ButtonRelease-1>",command=a)
     #Label que exibe o nome do slide
     my_labelNomeLimiar = ctk.CTkLabel(janela, text="Limiar", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-    my_labelNomeLimiar.place(x=1185,y=197)
+    my_labelNomeLimiar.place(x=1185,y=267)
 
     #Slider do Valor C
-    sliderValorC = ctk.CTkSlider(janela,from_=0, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#6D08BA", progress_color="#9518f5", command=setValorC, state="normal", bg_color="#1c1c1c")
-    sliderValorC.place(x=1185,y=240)
+    sliderValorC = ctk.CTkSlider(janela,from_=-255, to=255, width=200,height=18,button_color="#9518f5", button_hover_color="#A131F6", progress_color="#9518f5", command=setValorC, state="normal", bg_color="#1c1c1c")
+    sliderValorC.place(x=1185,y=310)
     #inicia o slide na posição 0
     sliderValorC.set(0)
     #Label que exibe o valor atual do slide
     my_labelValorC = ctk.CTkLabel(janela, text=sliderValorC.get(), bg_color="#1c1c1c", fg_color="#1c1c1c", font=fontD)
-    my_labelValorC.place(x=1395,y=233)
+    my_labelValorC.place(x=1395,y=317)
     #Executa uma função de processamento de imagem ao soltar o mouse do slide
     #sliderLimiar.bind("<ButtonRelease-1>",command=a)
     #Label que exibe o nome do slide
     my_labelNomeValorC = ctk.CTkLabel(janela, text="Valor C", bg_color="#1c1c1c", fg_color="#1c1c1c", text_color="#f7f7f7", font=fontC, height=0)
-    my_labelNomeValorC.place(x=1185,y=267)
+    my_labelNomeValorC.place(x=1185,y=351)
 
 
 def botaoPropriedades():
@@ -505,14 +655,16 @@ def botaoPropriedades():
     global btnIconProp
     btnIconProp = ctk.CTkButton(master=janela, bg_color="#1c1c1c", image=iconProp, text='', fg_color="#1c1c1c", width=15,height=15, hover=False, command=abrirMenuPropriedades, corner_radius=0)
     btnIconProp.place(x = 1408, y = 65)
+    btnIconProp.configure(cursor="arrow")
 
     #Para aplicar o efeito de hover
     btnIconProp.bind("<Enter>", command=lambda event: hoverBotaoPropriedades(1377,60))
-    btnIconProp.bind("<Leave>", command=leave)
+    btnIconProp.bind("<Leave>", command=leaveAlt)
 
 def abrirMenuPropriedades():
     btnIconProp.destroy()
     leave('')
+    leaveAlt('')
     menuPropriedades()
 
 def fecharMenuPropriedades():
@@ -520,6 +672,9 @@ def fecharMenuPropriedades():
     sliderJanela.destroy()
     my_labelJanela.destroy()
     my_labelNomeJanela.destroy()
+    sliderKernel.destroy()
+    my_labelKernel.destroy()
+    my_labelNomeKernel.destroy()
     sliderLimiar.destroy()
     my_labelLimiar.destroy()
     my_labelNomeLimiar.destroy()
@@ -530,6 +685,102 @@ def fecharMenuPropriedades():
     frameDireito.destroy()
     botaoPropriedades()
     print('clicou')
+
+def fecharPopUp(popUp, textLabel, btn):
+    
+    if isinstance(textLabel, list):
+        for t in textLabel:
+            t.destroy()
+    else:
+        textLabel.destroy()
+
+    btn.destroy()
+    popUp.destroy()
+    global cliquePOPUP1, cliquePOPUP2
+    cliquePOPUP1 = 0
+    cliquePOPUP2 = 0
+
+def ajudaProp():
+    global cliquePOPUP2
+    if cliquePOPUP2 == 0:
+        cliquePOPUP2+=1
+        popup = ctk.CTkToplevel(janela, fg_color="#141414")
+        popup.geometry('900x350')
+        popup.title('Opções de edição e suas propriedades')
+        popup.resizable(0,0)
+        #títulos
+        fontTitulo = ctk.CTkFont(family="Inconsolata", size = 14, weight="bold")
+        tituloLabel = ctk.CTkLabel(popup, text='Propriedades Disponíveis de Cada Opção de Edição', anchor='n', justify='center', font=fontTitulo, text_color="#9518f5")
+        tituloLabel.grid(row=1, column= 2, padx=(0,0), pady=(10,10),)
+
+        fontAux1 = ctk.CTkFont(family="Inconsolata",size=14, weight="bold")
+        fontAux2 = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
+
+        pbLabel = ctk.CTkLabel(popup, text='Filtro Passa-Baixa', text_color="#848484", font=fontAux1, anchor='w', justify='left')
+        pbLabel.grid(row = 2, column=0, padx=(10,10), pady=(10,0), sticky ='W')
+        kernelLabel = ctk.CTkLabel(popup, text='Kernel - Filtros', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        kernelLabel.grid(row = 3, column=0, padx=(10,10), pady=(0,0), sticky = 'W')
+
+        paLabel = ctk.CTkLabel(popup, text='Filtro Passa-Alta', text_color="#848484", font=fontAux1, anchor='w', justify='left')
+        paLabel.grid(row = 2, column=1, padx=(10,10), pady=(10,0), sticky = 'W')
+        kernelLabel = ctk.CTkLabel(popup, text='Kernel - Filtros', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        kernelLabel.grid(row = 3, column=1, padx=(10,10), pady=(0,0), sticky = 'W')
+
+        sgLabel = ctk.CTkLabel(popup, text='Segmentação', text_color="#848484", font=fontAux1, anchor='w', justify='left')
+        sgLabel.grid(row = 2, column=2,padx=(10,10),pady=(10,0), sticky = 'W')
+        janelaLabel = ctk.CTkLabel(popup, text='Janela - Segmentação e Morfologia', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        janelaLabel.grid(row = 3, column=2, padx=(10,10),pady=(10,0), sticky = 'W')
+        limiarLabel = ctk.CTkLabel(popup, text='Limiar', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        limiarLabel.grid(row = 4, column=2, padx=(10,10),pady=(10,0), sticky = 'W')
+        cLabel = ctk.CTkLabel(popup, text='Valor C', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        cLabel.grid(row = 5, column=2, padx=(10,10),pady=(10,0), sticky = 'W')
+        biLabel = ctk.CTkLabel(popup, text='Na binarização, a janela não é considerada', text_color="#B762F8", font=fontAux2, anchor='w', justify='left')
+        biLabel.grid(row = 6, column=2, padx=(10,10),pady=(10,0), sticky = 'W')
+        ccLabel = ctk.CTkLabel(popup, text='O valor C é usado somente na limiarização adaptativa média', text_color="#B762F8", font=fontAux2, anchor='w', justify='left')
+        ccLabel.grid(row = 7, column=2, padx=(10,10),pady=(10,0), sticky = 'W')
+
+        mfLabel = ctk.CTkLabel(popup, text='Morfologia', text_color="#848484", font=fontAux1, anchor='w', justify='left')
+        mfLabel.grid(row = 2, column=3, padx=(10,10),pady=(10,0), sticky = 'W')
+        janelaLabel = ctk.CTkLabel(popup, text='Janela - Segmentação e Morfologia', text_color="#fefefe", font=fontAux2, anchor='w', justify='left')
+        janelaLabel.grid(row = 3, column=3, padx=(10,10),pady=(10,0), sticky = 'W')
+        
+        btn = ctk.CTkButton(popup, text='Ok', bg_color="#9518f5", fg_color="#9518f5", corner_radius=1, hover_color="#6D08BA", font=fontAux1, command=lambda:fecharPopUp(popup, [pbLabel,kernelLabel,paLabel, sgLabel, janelaLabel,limiarLabel, cLabel, biLabel, mfLabel], btn))
+        btn.grid(row = 8, column=2, padx=(10,10),pady=(30,10))
+
+        popup.after(100, lambda: popup.lift())
+
+
+def hoverAjuda(xF, yF, btnAjuda):
+    btnAjuda.configure(text_color="#9518f5", border_color="#9518f5")
+
+def leaveHoverAjuda(btnAjuda):
+    btnAjuda.configure(text_color="#b762f8", border_color="#b762f8")
+
+
+
+def popupJanela(msg, msgBotao, op):
+    #POP-UP
+    global cliquePOPUP1
+    print(f'tt {cliquePOPUP1}')
+    if cliquePOPUP1 == 0:
+        cliquePOPUP1+=1
+        popup = ctk.CTkToplevel(janela, fg_color="#141414")
+        popup.geometry('380x200')
+        popup.title('Aviso')
+        popup.resizable(0,0)
+        textLabel = ctk.CTkLabel(popup, text=msg, text_color="#fefefe", font=fontB)
+        textLabel.pack(pady=20,padx = 20)
+        fontE = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
+        fontF = ctk.CTkFont(family="Inconsolata",size=14, weight="bold")
+        
+        btn = ctk.CTkButton(popup, text=msgBotao, bg_color="#9518f5", fg_color="#9518f5", corner_radius=1, hover_color="#6D08BA", font=fontF, command=lambda:fecharPopUp(popup,textLabel, popup))
+        btn.pack()
+        popup.after(100, lambda: popup.lift())
+
+        if op:
+           pass
+        
+
 
 # Cria a canvas para a imagem original com borda (sem background)
 original_image_canvas = ctk.CTkCanvas(janela, width=700, height=700, bg="#171717",  highlightthickness=0)
@@ -545,7 +796,6 @@ fontD = ctk.CTkFont(family="Inconsolata",size=14)
 fontB = ctk.CTkFont(family="Inconsolata",size=14)
 #Fonte de título de cada seção
 fontC = ctk.CTkFont(family="Inconsolata",size=13, weight="bold")
-
 
 '''criar frames'''
 frameEsquerdo = ctk.CTkFrame(master=janela,width=220,height=1000,fg_color="#1c1c1c", bg_color="#1c1c1c").place(x=0,y=0)
@@ -728,6 +978,15 @@ btnFechamento.place(x=12,y=618)
 btnFechamento.bind("<Enter>", command=lambda event: hover(12,618,'MF'))
 btnFechamento.bind("<Leave>", command=leave)
 
+
+fontG = ctk.CTkFont(family="Inconsolata",size=14, weight="bold")
+btnAjuda = ctk.CTkButton(frameEsquerdo, text='Ajuda', font=fontG, corner_radius=1, hover=False, bg_color="#b762f8",text_color="#b762f8", fg_color="#141414", command=ajudaProp, height=10, width=10, border_color="#b762f8",border_width=2,border_spacing=5)
+btnAjuda.place(x=12, y = 698)
+
+#Para aplicar o efeito de hover
+btnAjuda.bind("<Enter>", command=lambda event: hoverAjuda(btnAjuda.winfo_x(),btnAjuda.winfo_y(), btnAjuda))
+btnAjuda.bind("<Leave>", command=lambda e: leaveHoverAjuda(btnAjuda))
+
 '''Menu Propriedades'''
 botaoPropriedades()
 
@@ -751,8 +1010,7 @@ Comentários Gerais
 #janela.maxsize() pode redimensionar até tanto de tamanho
 #janela.resizable() permite ou proibe redimensionar
 
-#POP-UP
-#janela = ctk.CTkToplevel(janela, fg_color="#141414")
+
 
 #janela.attributes("-fullscreen", True)
 #janela.state('zoomed')
