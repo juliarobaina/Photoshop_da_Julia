@@ -1,10 +1,7 @@
-import tkinter as tk
-from tkinter import filedialog
 import cv2
-from PIL import Image, ImageTk
 import numpy as np
 from math import floor
-from matplotlib import pyplot as plt#do histograma func
+from matplotlib import pyplot as plt #do histograma func
 
 
 def escalaDeCinza(img_cv):
