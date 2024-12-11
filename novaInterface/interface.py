@@ -261,7 +261,7 @@ def salvarImagem():
     if img_pil is None:
         popupJanela('Carregue uma Imagem', 'Ok',0)    
     else:
-        nomeArquivo = filedialog.asksaveasfile(mode='w', defaultextension='jpg')
+        nomeArquivo = ctk.filedialog.asksaveasfile(mode='w', defaultextension='jpg')
    
         if nomeArquivo is None:
             return
